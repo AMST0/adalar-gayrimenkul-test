@@ -1,49 +1,47 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AdminUser } from '../types';
-import { getStorageItem, setStorageItem, removeStorageItem, STORAGE_KEYS } from '../utils/storage';
-import { mockAdminUser } from '../data/mockData';
+import { supabase } from '../utils/supabaseClient';
 
 interface AdminContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
+
 
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Initialize admin user if not exists
-    const adminUser = getStorageItem(STORAGE_KEYS.ADMIN_USER, mockAdminUser);
-    setStorageItem(STORAGE_KEYS.ADMIN_USER, adminUser);
-
-    // Check for existing session
-    const session = getStorageItem(STORAGE_KEYS.ADMIN_SESSION, null);
-    if (session && new Date().getTime() < session.expires) {
-      setIsAuthenticated(true);
-    }
+    const session = supabase.auth.getSession();
+    session.then(({ data }) => {
+      if (data.session) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    const adminUser = getStorageItem(STORAGE_KEYS.ADMIN_USER, mockAdminUser);
-    
-    if (username === adminUser.username && password === adminUser.password) {
-      const session = {
-        username,
-        expires: new Date().getTime() + (24 * 60 * 60 * 1000), // 24 hours
-      };
-      setStorageItem(STORAGE_KEYS.ADMIN_SESSION, session);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
       setIsAuthenticated(true);
       return true;
     }
-    
+    setIsAuthenticated(false);
     return false;
   };
 
-  const logout = () => {
-    removeStorageItem(STORAGE_KEYS.ADMIN_SESSION);
+  const logout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
   };
 

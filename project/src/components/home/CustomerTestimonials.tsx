@@ -224,7 +224,7 @@ const CustomerTestimonials: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-blue-900">{testimonial.name}</p>
+                  <p className="font-semibold text-blue-900">{maskName(testimonial.name)}</p>
                   <Quote className="w-4 h-4 text-amber-500" />
                 </div>
               </div>

@@ -6,7 +6,7 @@ import Button from '../common/Button';
 const AdminLogin: React.FC = () => {
   const { login } = useAdmin();
   const [credentials, setCredentials] = useState({
-    username: '',
+    email: '',
     password: '',
   });
   const [error, setError] = useState('');
@@ -16,16 +16,10 @@ const AdminLogin: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const success = login(credentials.username, credentials.password);
-    
+    const success = await login(credentials.email, credentials.password);
     if (!success) {
-      setError('Kullanıcı adı veya şifre hatalı!');
+      setError('E-posta veya şifre hatalı!');
     }
-    
     setIsLoading(false);
   };
 
@@ -59,20 +53,20 @@ const AdminLogin: React.FC = () => {
               )}
 
               <div className="space-y-2">
-                <label htmlFor="username" className="block text-sm font-bold text-gray-700">
-                  Kullanıcı Adı
+                <label htmlFor="email" className="block text-sm font-bold text-gray-700">
+                  E-posta
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value={credentials.username}
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={credentials.email}
                     onChange={handleChange}
                     required
                     className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300"
-                    placeholder="Kullanıcı adınızı girin"
+                    placeholder="E-posta adresinizi girin"
                   />
                 </div>
               </div>
@@ -114,7 +108,7 @@ const AdminLogin: React.FC = () => {
 
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-500">
-                Demo Bilgileri: admin / admin123
+                Demo Bilgileri: admin@site.com / şifreniz
               </p>
             </div>
           </div>

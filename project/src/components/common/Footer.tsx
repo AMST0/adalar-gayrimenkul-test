@@ -102,7 +102,9 @@ const Footer: React.FC = () => {
             </h4>
             <div className="flex space-x-4">
               <a
-                href="#"
+                href="https://www.instagram.com/realtyworld.adalar?igsh=am12NXN1amVvcTJ5"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-12 h-12 bg-blue-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
               >
                 <Instagram className="w-6 h-6" />
@@ -120,21 +122,6 @@ const Footer: React.FC = () => {
                 <Twitter className="w-6 h-6" />
               </a>
             </div>
-            <div className="mt-8">
-              <p className="text-blue-200 text-sm mb-4">
-                Özel fırsatlardan ilk siz haberdar olun!
-              </p>
-              <div className="flex">
-                <input
-                  type="email"
-                  placeholder="E-posta adresiniz"
-                  className="flex-1 px-4 py-3 text-sm bg-blue-800/50 border border-blue-700 rounded-l-xl text-white placeholder-blue-300 focus:outline-none focus:border-red-500 backdrop-blur-sm"
-                />
-                <button className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-3 rounded-r-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl">
-                  Abone Ol
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -149,9 +136,6 @@ const Footer: React.FC = () => {
               </a>
               <a href="#" className="text-blue-200 hover:text-white transition-colors duration-300">
                 Kullanım Koşulları
-              </a>
-              <a href="/admin" className="text-red-400 hover:text-red-300 transition-colors duration-300 font-semibold">
-                Admin Panel
               </a>
             </div>
           </div>

@@ -30,7 +30,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
 
   useEffect(() => {
-    // Initialize with mock data if no data exists
+    // Production'da her zaman mockData ile başlat (seedle)
+    const isProd = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+    if (isProd) {
+      localStorage.setItem(STORAGE_KEYS.AGENTS, JSON.stringify(mockAgents));
+      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(mockProperties));
+      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(mockProjects));
+      localStorage.setItem(STORAGE_KEYS.TESTIMONIALS, JSON.stringify(mockTestimonials));
+      localStorage.setItem(STORAGE_KEYS.SLIDER, JSON.stringify(mockSliderItems));
+      localStorage.setItem(STORAGE_KEYS.CONTACT_REQUESTS, JSON.stringify([]));
+    }
     const loadedAgents = getStorageItem(STORAGE_KEYS.AGENTS, mockAgents);
     const loadedProperties = getStorageItem(STORAGE_KEYS.PROPERTIES, mockProperties);
     const loadedProjects = getStorageItem(STORAGE_KEYS.PROJECTS, mockProjects);

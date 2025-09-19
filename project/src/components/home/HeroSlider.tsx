@@ -37,16 +37,16 @@ const HeroSlider: React.FC = () => {
           <div className="mb-8">
             <Star className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-bounce" />
           </div>
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 animate-fade-in">
+          <h1 className="text-3xl sm:text-5xl md:text-8xl font-bold mb-4 sm:mb-6 animate-fade-in">
             <img src="https://i.hizliresim.com/rs5qoel.png" alt="" />
           </h1>
-          <p className="text-2xl md:text-3xl text-blue-200 mb-8 animate-slide-up">
+          <p className="text-base sm:text-xl md:text-3xl text-blue-200 mb-4 sm:mb-8 animate-slide-up">
             Premium Real Estate Solutions
           </p>
           <div className="animate-slide-up" style={{ animationDelay: '0.5s' }}>
             <a
               href="/arsalar"
-              className="inline-flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-4 rounded-xl font-bold hover:from-red-700 hover:to-red-800 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl"
+              className="inline-flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 sm:px-8 sm:py-4 rounded-xl font-bold hover:from-red-700 hover:to-red-800 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl"
             >
               <TrendingUp className="mr-2 w-5 h-5" />
               Arsaları Keşfet
