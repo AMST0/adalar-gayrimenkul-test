@@ -7,7 +7,7 @@ const Header: React.FC = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
-    <header className="bg-white shadow-lg fixed w-full top-0 z-50">
+  <header className="bg-black shadow-lg fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -18,38 +18,38 @@ const Header: React.FC = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-8 bg-black">
             <a
               href="/"
-              className="text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold relative group"
+              className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
               Ana Sayfa
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
             </a>
             <a
               href="/biz-kimiz"
-              className="text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold relative group"
+              className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
               Biz Kimiz
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
             </a>
             <a
               href="/danismanlar"
-              className="text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold relative group"
+              className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
               Danışmanlar
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
             </a>
             <a
               href="/arsalar"
-              className="text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold relative group"
+              className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
               Arsalar
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
             </a>
             <a
               href="/iletisim"
-              className="text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold relative group"
+              className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
               İletişim
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
@@ -60,7 +60,7 @@ const Header: React.FC = () => {
           <div className="hidden md:block">
             <a
               href="/iletisim"
-              className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-yellow-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-red-500 to-yellow-600 text-white px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-yellow-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               İletişime Geç
             </a>
@@ -82,38 +82,38 @@ const Header: React.FC = () => {
           isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <nav className="px-4 py-6 bg-gray-50 border-t">
+  <nav className="px-4 py-6 bg-black border-t">
           <a
             href="/"
-            className="block py-3 text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold"
+            className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
             Ana Sayfa
           </a>
           <a
             href="/biz-kimiz"
-            className="block py-3 text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold"
+            className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
             Biz Kimiz
           </a>
           <a
             href="/danismanlar"
-            className="block py-3 text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold"
+            className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
             Danışmanlar
           </a>
           <a
             href="/arsalar"
-            className="block py-3 text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold"
+            className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
             Arsalar
           </a>
           <a
             href="/iletisim"
-            className="block py-3 text-gray-700 hover:text-red-600 transition-colors duration-300 font-semibold"
+            className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
             İletişim

@@ -32,7 +32,7 @@ const Properties: React.FC = () => {
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-3 border border-white/20">
               <span className="text-yellow-400 font-bold text-lg mr-2">📍</span>
               <span className="text-white font-semibold">
-                Adalar Gayrimenkul / Büyükada, Heybeliada, Burgazada
+                Adalar Gayrimenkul 
               </span>
             </div>
           </div>

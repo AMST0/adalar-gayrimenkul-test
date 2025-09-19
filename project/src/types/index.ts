@@ -9,6 +9,7 @@ export interface Agent {
   specialties: string[];
   isActive: boolean;
   isFeatured: boolean;
+  portfolioUrl?: string;
 }
 
 export interface Property {
@@ -34,6 +35,7 @@ export interface Testimonial {
   name: string;
   initials: string;
   comment: string;
+  rating?: number;
   isActive: boolean;
 }
 
@@ -43,8 +45,6 @@ export interface SliderItem {
   subtitle: string;
   location: string;
   image: string;
-  ctaText: string;
-  ctaLink: string;
   isActive: boolean;
 }
 
@@ -52,6 +52,7 @@ export interface ContactRequest {
   id: string;
   name: string;
   email: string;
+  phone: string;
   message: string;
   date: string;
   isRead: boolean;

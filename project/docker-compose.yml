@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - appnet
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge

@@ -8,6 +8,7 @@ const ContactForm: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,10 +33,26 @@ const ContactForm: React.FC = () => {
     addContactRequest({
       name: formData.name,
       email: formData.email,
+      phone: formData.phone,
       message: formData.message,
     });
 
-    setFormData({ name: '', email: '', message: '' });
+    setFormData({ name: '', email: '', phone: '', message: '' });
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefon Numaranız *
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                  placeholder="Telefon numaranızı girin"
+                />
+              </div>
     setIsSubmitted(true);
     setIsSubmitting(false);
 
@@ -99,6 +116,23 @@ const ContactForm: React.FC = () => {
                 />
               </div>
 
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefon Numaranız *
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                  placeholder="Telefon numaranızı girin"
+                />
+              </div>
+
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                   Mesajınız *
@@ -145,8 +179,8 @@ const ContactForm: React.FC = () => {
                   <div>
                     <h4 className="font-semibold text-blue-900 mb-1">Adres</h4>
                     <p className="text-gray-600">
-                      Büyükada Mah. İskele Caddesi<br />
-                      No: 15/A Adalar/İstanbul
+                      Çınar Mahallesi, Rıfkı Tongsir Caddesi, <br />
+                      Küçükyalı Nidapark Maltepe/İstanbul
                     </p>
                   </div>
                 </div>
@@ -188,7 +222,7 @@ const ContactForm: React.FC = () => {
             {/* Google Maps */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3015.7739901707894!2d29.1264645!3d40.8772956!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac402bb3dbe69%3A0x6b7e2e3e2e1b1c9e!2sB%C3%BCy%C3%BCkada%2C%20%C4%B0stanbul!5e0!3m2!1str!2str!4v1699000000000!5m2!1str!2str"
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3014.592214979685!2d29.1201351!3d40.9473811!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac763fb08f08b%3A0x699f8c8954c902a!2sAdalar+Gayrimenkul+Realty+World!5e0!3m2!1str!2str!4v1699000000000!5m2!1str!2str"
                 width="100%"
                 height="300"
                 style={{ border: 0 }}

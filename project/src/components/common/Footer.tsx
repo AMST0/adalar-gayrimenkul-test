@@ -14,14 +14,8 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Logo & Description */}
           <div className="space-y-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
-                <MapPin className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold"><img src="https://i.hizliresim.com/noxmykv.png" alt="" /></h3>
-                <p className="text-red-300 text-sm font-semibold">Premium Real Estate</p>
-              </div>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl font-bold"><img src="https://i.hizliresim.com/noxmykv.png" alt="" /></h1>
             </div>
             <p className="text-blue-200 leading-relaxed">
               Adalar'ın en prestijli gayrimenkul danışmanlık firması. 
@@ -93,8 +87,8 @@ const Footer: React.FC = () => {
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-blue-200 group-hover:text-white transition-colors">
-                  Büyükada Mah. İskele Caddesi<br />
-                  No: 15/A Adalar/İstanbul
+                  Çınar Mahallesi, Rıfkı Tongsir Caddesi, <br />
+                  Küçükyalı Nidapark Maltepe/İstanbul
                 </span>
               </div>
             </div>

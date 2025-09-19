@@ -22,6 +22,10 @@ import { useAdmin } from '../../contexts/AdminContext';
 import { Agent, Property, Project, Testimonial, SliderItem, ContactRequest } from '../../types';
 import Button from '../common/Button';
 
+
+import { useEffect } from 'react';
+import { STORAGE_KEYS, getStorageItem } from '../../utils/storage';
+
 const AdminPanel: React.FC = () => {
   const { logout } = useAdmin();
   const {
@@ -43,12 +47,21 @@ const AdminPanel: React.FC = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
 
+  // İletişim taleplerini otomatik güncelle
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const latest = getStorageItem(STORAGE_KEYS.CONTACT_REQUESTS, []);
+      updateContactRequests(latest);
+    }, 2000); // 2 saniyede bir güncelle
+    return () => clearInterval(interval);
+  }, [updateContactRequests]);
+
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
     { id: 'agents', label: 'Danışmanlar', icon: Users },
     { id: 'properties', label: 'Arsalar', icon: Building },
     { id: 'slider', label: 'Ana Sayfa Slider', icon: Image },
-    { id: 'testimonials', label: 'Müşteri Yorumları', icon: MessageSquare },
+  { id: 'testimonials', label: 'Müşteri Yorumları', icon: MessageSquare },
     { id: 'contact', label: 'İletişim Talepleri', icon: Mail },
   ];
 
@@ -278,8 +291,98 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'agents' && renderAgents()}
             {activeTab === 'properties' && renderProperties()}
             {activeTab === 'slider' && <div>Slider yönetimi yakında...</div>}
-            {activeTab === 'testimonials' && <div>Yorum yönetimi yakında...</div>}
-            {activeTab === 'contact' && <div>İletişim talepleri yakında...</div>}
+            {activeTab === 'testimonials' && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Müşteri Yorumları</h2>
+                {testimonials.length === 0 ? (
+                  <p className="text-gray-500">Henüz müşteri yorumu yok.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border rounded-lg">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 border-b">Ad Soyad</th>
+                          <th className="px-4 py-2 border-b">Yorum</th>
+                          <th className="px-4 py-2 border-b">Puan</th>
+                          <th className="px-4 py-2 border-b">Durum</th>
+                          <th className="px-4 py-2 border-b">İşlem</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {testimonials.slice().reverse().map((t) => (
+                          <tr key={t.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border-b">{t.name}</td>
+                            <td className="px-4 py-2 border-b max-w-xs whitespace-pre-line">{t.comment}</td>
+                            <td className="px-4 py-2 border-b">
+                              {t.rating ? (
+                                <span className="flex items-center gap-1">
+                                  {[1,2,3,4,5].map(i => (
+                                    <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i <= t.rating ? '#fbbf24' : 'none'} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                  ))}
+                                </span>
+                              ) : '-'}
+                            </td>
+                            <td className="px-4 py-2 border-b">
+                              {t.isActive ? (
+                                <span className="text-green-600 font-semibold">Yayında</span>
+                              ) : (
+                                <span className="text-yellow-600 font-semibold">Onay Bekliyor</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 border-b">
+                              <button
+                                className={`px-3 py-1 rounded font-bold text-xs ${t.isActive ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                                onClick={() => {
+                                  const updated = testimonials.map(item => item.id === t.id ? { ...item, isActive: !item.isActive } : item);
+                                  updateTestimonials(updated);
+                                }}
+                              >
+                                {t.isActive ? 'Yayından Kaldır' : 'Yayınla'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+            {activeTab === 'contact' && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">İletişim Talepleri</h2>
+                {contactRequests.length === 0 ? (
+                  <p className="text-gray-500">Henüz iletişim talebi yok.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border rounded-lg">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 border-b">Ad Soyad</th>
+                          <th className="px-4 py-2 border-b">E-posta</th>
+                          <th className="px-4 py-2 border-b">Telefon</th>
+                          <th className="px-4 py-2 border-b">Mesaj</th>
+                          <th className="px-4 py-2 border-b">Tarih</th>
+                          <th className="px-4 py-2 border-b">Okundu</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {contactRequests.slice().reverse().map((req) => (
+                          <tr key={req.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 border-b">{req.name}</td>
+                            <td className="px-4 py-2 border-b">{req.email}</td>
+                            <td className="px-4 py-2 border-b">{req.phone}</td>
+                            <td className="px-4 py-2 border-b max-w-xs whitespace-pre-line">{req.message}</td>
+                            <td className="px-4 py-2 border-b">{new Date(req.date).toLocaleString('tr-TR')}</td>
+                            <td className="px-4 py-2 border-b text-center">{req.isRead ? '✓' : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -303,6 +406,7 @@ const AgentForm: React.FC<{
     specialties: agent.specialties?.join(', ') || '',
     isActive: agent.isActive ?? true,
     isFeatured: agent.isFeatured ?? false,
+    portfolioUrl: agent.portfolioUrl || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -311,6 +415,7 @@ const AgentForm: React.FC<{
       ...formData,
       id: agent.id || '',
       specialties: formData.specialties.split(',').map(s => s.trim()),
+      portfolioUrl: formData.portfolioUrl,
     } as Agent);
   };
 
@@ -382,6 +487,13 @@ const AgentForm: React.FC<{
             onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
             className="w-full p-3 border border-gray-300 rounded-lg"
             required
+          />
+          <input
+            type="url"
+            placeholder="Sahibinden Portföy Linki (opsiyonel)"
+            value={formData.portfolioUrl}
+            onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-lg"
           />
           
           <div className="space-y-2">

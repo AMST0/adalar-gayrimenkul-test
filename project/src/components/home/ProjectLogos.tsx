@@ -10,17 +10,20 @@ const ProjectLogos: React.FC = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const scroll = () => {
-      if (container.scrollLeft >= container.scrollWidth / 2) {
-        container.scrollLeft = 0;
-      } else {
-        container.scrollLeft += 1;
-      }
-    };
+    let reqId: number;
+    const speed = 0.6; // px per frame, daha yavaş ve akıcı
 
-    const interval = setInterval(scroll, 30);
-    return () => clearInterval(interval);
-  }, []);
+    const animate = () => {
+      if (container.scrollLeft >= container.scrollWidth / 4) {
+        // Kalan kısmı ekleyerek yumuşak geçiş
+        container.scrollLeft = container.scrollLeft - container.scrollWidth / 4;
+      }
+      container.scrollLeft += speed;
+      reqId = requestAnimationFrame(animate);
+    };
+    reqId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(reqId);
+  }, [activeProjects.length]);
 
   if (activeProjects.length === 0) return null;
 
@@ -29,7 +32,7 @@ const ProjectLogos: React.FC = () => {
 
   return (
     <section className="py-16 bg-gray-50 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-11xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
             Projelerimiz
@@ -49,18 +52,14 @@ const ProjectLogos: React.FC = () => {
               key={`${project.id}-${index}`}
               className="flex-shrink-0 group cursor-pointer"
             >
-              <div className="w-48 h-32 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-500 p-6 flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-50">
+              <div className="w-64 h-40 bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-500 p-8 flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-50">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-lg overflow-hidden">
+                  <div className="w-41 h-28 mx-auto mb-3 rounded-lg overflow-hidden">
                     <img
                       src={project.logo}
-                      alt={project.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-120 transition-transform duration-900"
                     />
                   </div>
-                  <h3 className="font-semibold text-blue-900 group-hover:text-amber-600 transition-colors duration-300">
-                    {project.name}
-                  </h3>
                 </div>
               </div>
             </div>

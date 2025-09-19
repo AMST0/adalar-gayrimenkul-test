@@ -7,6 +7,7 @@ const ContactContent: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,16 +26,15 @@ const ContactContent: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
+    // Sadece local işlemler (admin panele kayıt)
     addContactRequest({
       name: formData.name,
       email: formData.email,
+      phone: formData.phone,
       message: formData.message,
     });
 
-    setFormData({ name: '', email: '', message: '' });
+    setFormData({ name: '', email: '', phone: '', message: '' });
     setIsSubmitted(true);
     setIsSubmitting(false);
 
@@ -124,6 +124,23 @@ const ContactContent: React.FC = () => {
                   />
                 </div>
 
+
+                <div className="relative group">
+                  <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-3">
+                    Telefon Numaranız *
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 text-lg group-hover:border-red-300"
+                    placeholder="Telefon numaranızı girin"
+                  />
+                </div>
+
                 <div className="relative group">
                   <label htmlFor="message" className="block text-sm font-bold text-gray-700 mb-3">
                     Mesajınız *
@@ -188,11 +205,11 @@ const ContactContent: React.FC = () => {
                   <div className="flex-1">
                     <h4 className="font-bold text-blue-900 text-xl mb-3">Adres</h4>
                     <p className="text-gray-600 leading-relaxed">
-                      Büyükada Mah. İskele Caddesi<br />
-                      No: 15/A Adalar/İstanbul
+                      Çınar Mahallesi, Rıfkı Tongsir Caddesi, <br />
+                      Küçükyalı Nidapark Maltepe/İstanbul
                     </p>
                     <a
-                      href="https://maps.google.com"
+                      href="https://www.google.com/maps/place/Adalar+Gayrimenkul+Realty+World/@40.9473811,29.1201351,17z/data=!3m1!4b1!4m6!3m5!1s0x14cac763fb08f08b:0x699f8c8954c902a!8m2!3d40.9473811!4d29.1201351!16s%2Fg%2F11xst2mx62?hl=tr&entry=ttu&g_ep=EgoyMDI1MDkxNi4wIKXMDSoASAFQAw%3D%3D"
                       className="inline-flex items-center mt-4 text-red-600 hover:text-red-700 font-semibold group-hover:translate-x-2 transition-all duration-300"
                     >
                       <MapPin className="w-4 h-4 mr-2" />
@@ -228,13 +245,13 @@ const ContactContent: React.FC = () => {
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-blue-900 mb-4">Ofis Konumumuz</h2>
             <p className="text-gray-600 text-lg">
-              Büyükada'da merkezi konumumuzda sizleri bekliyoruz
+              Küçükyalı Nidapark konumumuzda sizleri bekliyoruz
             </p>
           </div>
           
           <div className="bg-gray-100 rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-700">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3015.7739901707894!2d29.1264645!3d40.8772956!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac402bb3dbe69%3A0x6b7e2e3e2e1b1c9e!2sB%C3%BCy%C3%BCkada%2C%20%C4%B0stanbul!5e0!3m2!1str!2str!4v1699000000000!5m2!1str!2str"
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3014.592214979685!2d29.1201351!3d40.9473811!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac763fb08f08b%3A0x699f8c8954c902a!2sAdalar+Gayrimenkul+Realty+World!5e0!3m2!1str!2str!4v1699000000000!5m2!1str!2str"
               width="100%"
               height="450"
               style={{ border: 0 }}

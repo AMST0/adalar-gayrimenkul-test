@@ -13,7 +13,7 @@ const FeaturedAgentCards: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Öne Çıkan Danışmanlarımız
+            BROKERLARIMIZ
           </h2>
           <p className="text-blue-200 text-lg max-w-2xl mx-auto">
             Alanında uzman, deneyimli danışmanlarımız sizin için en uygun çözümleri üretiyor
@@ -99,14 +99,25 @@ const FeaturedAgentCards: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* View Profile Button */}
-                  <div className="mt-6">
+                  {/* View Profile Button & Portfolio Link */}
+                  <div className="mt-6 space-y-2">
                     <a
                       href={`/danismanlar/${agent.id}`}
                       className="w-full block bg-gradient-to-r from-blue-900 to-blue-800 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-800 hover:to-blue-700 transition-all duration-300 text-center transform hover:scale-105"
                     >
                       Profili İncele
                     </a>
+                    {/* Sahibinden Portföyü butonu */}
+                    {agent.portfolioUrl && (
+                      <a
+                        href={agent.portfolioUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full block bg-gradient-to-r from-yellow-500 to-yellow-400 text-blue-900 py-3 px-6 rounded-lg font-semibold hover:from-yellow-400 hover:to-yellow-300 transition-all duration-300 text-center transform hover:scale-105"
+                      >
+                        Sahibinden Portföyü
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

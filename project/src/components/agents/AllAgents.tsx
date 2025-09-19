@@ -5,7 +5,7 @@ import { useData } from '../../contexts/DataContext';
 const AllAgents: React.FC = () => {
   const { agents } = useData();
   const [currentPage, setCurrentPage] = useState(0);
-  const activeAgents = agents.filter(agent => agent.isActive);
+  const activeAgents = agents.filter(agent => agent.isActive && !agent.isFeatured);
   const itemsPerPage = 6;
   const totalPages = Math.ceil(activeAgents.length / itemsPerPage);
   

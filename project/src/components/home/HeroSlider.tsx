@@ -108,24 +108,6 @@ const HeroSlider: React.FC = () => {
                   {slide.subtitle}
                 </p>
                 
-                {/* Enhanced CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-6 justify-center animate-slide-up-delay">
-                  <a
-                    href={slide.ctaLink}
-                    className="group bg-gradient-to-r from-red-600 to-red-700 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:from-red-700 hover:to-red-800 transform hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-3xl flex items-center justify-center"
-                  >
-                    <Star className="mr-3 w-6 h-6" />
-                    {slide.ctaText}
-                    <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
-                  </a>
-                  <a
-                    href="/iletisim"
-                    className="group border-2 border-white text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-white hover:text-blue-900 transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
-                  >
-                    <TrendingUp className="mr-3 w-6 h-6" />
-                    İletişime Geç
-                  </a>
-                </div>
               </div>
             </div>
           </div>
