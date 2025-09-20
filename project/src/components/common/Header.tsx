@@ -1,13 +1,39 @@
-import React, { useState } from 'react';
-import { Menu, X, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    // Sadece mobilde scroll hiding özelliği çalışsın
+    if (window.innerWidth < 768) {
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false); // Scrolling down
+      } else {
+        setIsVisible(true); // Scrolling up
+      }
+    } else {
+      setIsVisible(true); // Desktop'ta her zaman görünür
+    }
+    setLastScrollY(currentScrollY);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   return (
-  <header className="bg-black shadow-lg fixed w-full top-0 z-50">
+    <header
+      className={`bg-black shadow-lg fixed w-full top-0 z-50 transition-transform duration-300 ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -82,7 +108,7 @@ const Header: React.FC = () => {
           isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-  <nav className="px-4 py-6 bg-black border-t">
+        <nav className="px-4 py-6 bg-black border-t">
           <a
             href="/"
             className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"

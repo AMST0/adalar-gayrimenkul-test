@@ -5,16 +5,24 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string || 'https://your-project.supabase.co'
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string || 'your-anon-key'
 
+console.log('🔧 Supabase Configuration:', {
+  url: supabaseUrl,
+  keyLength: supabaseKey.length,
+  keyPreview: supabaseKey.substring(0, 20) + '...'
+});
+
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Database helper functions
 export const dbHelpers = {
   // Agents
   async getAgents() {
+    console.log('🔍 getAgents() çağrıldı');
     const { data, error } = await supabase
       .from('agents')
       .select('*')
       .eq('is_active', true)
+    console.log('👥 Agents sorgu sonucu:', { data, error });
     return { data: data || [], error }
   },
 
@@ -22,6 +30,22 @@ export const dbHelpers = {
     const { data, error } = await supabase
       .from('agents')
       .insert([agent])
+    return { data, error }
+  },
+
+  async updateAgent(id: string, agent: any) {
+    const { data, error } = await supabase
+      .from('agents')
+      .update(agent)
+      .eq('id', id)
+    return { data, error }
+  },
+
+  async deleteAgent(id: string) {
+    const { data, error } = await supabase
+      .from('agents')
+      .update({ is_active: false })
+      .eq('id', id)
     return { data, error }
   },
 
@@ -41,6 +65,22 @@ export const dbHelpers = {
     return { data, error }
   },
 
+  async updateProperty(id: string, property: any) {
+    const { data, error } = await supabase
+      .from('properties')
+      .update(property)
+      .eq('id', id)
+    return { data, error }
+  },
+
+  async deleteProperty(id: string) {
+    const { data, error } = await supabase
+      .from('properties')
+      .update({ is_active: false })
+      .eq('id', id)
+    return { data, error }
+  },
+
   // Testimonials
   async getTestimonials() {
     const { data, error } = await supabase
@@ -54,6 +94,22 @@ export const dbHelpers = {
     const { data, error } = await supabase
       .from('testimonials')
       .insert([testimonial])
+    return { data, error }
+  },
+
+  async updateTestimonial(id: string, testimonial: any) {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .update(testimonial)
+      .eq('id', id)
+    return { data, error }
+  },
+
+  async deleteTestimonial(id: string) {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .update({ is_active: false })
+      .eq('id', id)
     return { data, error }
   },
 
@@ -90,5 +146,13 @@ export const dbHelpers = {
       .eq('is_active', true)
       .order('sort_order')
     return { data: data || [], error }
+  },
+
+  async updateSliderItem(id: string, item: any) {
+    const { data, error } = await supabase
+      .from('slider_items')
+      .update(item)
+      .eq('id', id)
+    return { data, error }
   }
 }

@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: adalar-postgres
+    environment:
+      POSTGRES_DB: adalar_gayrimenkul
+      POSTGRES_USER: adalar_user
+      POSTGRES_PASSWORD: adalar123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # Backend service (opsiyonel)
+  backend:
+    build: ./backend
+    container_name: adalar-backend
+    environment:
+      DB_HOST: postgres
+      DB_NAME: adalar_gayrimenkul
+      DB_USER: adalar_user
+      DB_PASSWORD: adalar123
+    ports:
+      - "5001:5001"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

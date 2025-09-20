@@ -55,6 +55,22 @@ const CustomerTestimonials: React.FC = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [rating, setRating] = useState(0);
 
+  // Aktif testimonial (ön planda olan) state'i
+  const [activeTestimonialId, setActiveTestimonialId] = useState<string | null>(null);
+
+  // Hover ve click handler'ları
+  const handleMouseEnter = (id: string) => {
+    setActiveTestimonialId(id);
+  };
+
+  const handleMouseLeave = () => {
+    setActiveTestimonialId(null);
+  };
+
+  const handleMobileClick = (id: string) => {
+    setActiveTestimonialId(activeTestimonialId === id ? null : id);
+  };
+
   const handleAddTestimonial = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newComment.trim() || rating === 0) return;
@@ -82,15 +98,51 @@ const CustomerTestimonials: React.FC = () => {
   const activeTestimonials = useMemo(() => testimonials.filter(testimonial => testimonial.isActive), [testimonials]);
 
   useEffect(() => {
-    // Sabit ve eşit aralıklı pozisyonlar ve delayler
+    // Daha iyi dağılım ile üst üste binmeyi önleme
     const count = activeTestimonials.length;
-    const positions = activeTestimonials.map((_, i) => ({
-      x: 20 + (60 * (i / Math.max(1, count - 1))), // 20% ile 80% arası eşit dağılım
-      y: 30 + (30 * ((i % 2) / 1)), // 30% veya 60% (2 satır gibi)
-      delay: i * 2, // Her biri için 2s arayla başlasın
-    }));
+    const positions = activeTestimonials.map((_, i) => {
+      const centerX = 50;
+      const centerY = 50;
+      
+      if (count === 1) {
+        return { x: centerX, y: centerY, delay: 0 };
+      }
+      
+      if (count === 2) {
+        // 2 yorum için sağ ve sol
+        return {
+          x: i === 0 ? 35 : 65,
+          y: centerY,
+          delay: i * 1.5,
+        };
+      }
+      
+      if (count === 3) {
+        // 3 yorum için üçgen
+        const positions = [
+          { x: 50, y: 35 }, // üst
+          { x: 35, y: 65 }, // sol alt
+          { x: 65, y: 65 }, // sağ alt
+        ];
+        return { ...positions[i], delay: i * 1.5 };
+      }
+      
+      // 4+ yorum için daire ama daha geniş yarıçap
+      const angle = (i * 2 * Math.PI) / count;
+      const radiusX = Math.min(30, 15 + count * 2); // Daha geniş yarıçap
+      const radiusY = Math.min(25, 12 + count * 1.5);
+      
+      const x = centerX + Math.cos(angle) * radiusX;
+      const y = centerY + Math.sin(angle) * radiusY;
+      
+      return {
+        x: Math.max(20, Math.min(80, x)), // %20-80 arası
+        y: Math.max(30, Math.min(70, y)), // %30-70 arası
+        delay: i * 1.5,
+      };
+    });
     setFloatingPositions(positions);
-  }, [testimonials]);
+  }, [activeTestimonials.length]);
 
   if (activeTestimonials.length === 0) return null;
 
@@ -183,7 +235,7 @@ const CustomerTestimonials: React.FC = () => {
           </p>
         </div>
 
-        <div className="relative h-96 md:h-[500px]">
+        <div className="relative h-96 md:h-[450px]">
           {activeTestimonials.map((testimonial, index) => (
             <div
               key={testimonial.id}
@@ -193,44 +245,64 @@ const CustomerTestimonials: React.FC = () => {
                 top: `${floatingPositions[index]?.y || 50}%`,
                 animationDelay: `${floatingPositions[index]?.delay || 0}s`,
               }}
+              onMouseEnter={() => handleMouseEnter(testimonial.id)}
+              onMouseLeave={() => handleMouseLeave()}
+              onClick={() => handleMobileClick(testimonial.id)} // Mobilde tıklama için
             >
-              <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-xs hover:shadow-3xl transition-all duration-500 hover:scale-105 group">
-                <div className="flex items-center justify-center w-12 h-12 bg-amber-500 rounded-full mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300">
-                  <span className="text-white font-bold text-lg">
-                    {testimonial.initials}
-                  </span>
+              <div
+                id={`testimonial-${testimonial.id}`}
+                className={`bg-white rounded-2xl p-6 shadow-2xl max-w-xs transition-all duration-500 group cursor-pointer ${
+                  activeTestimonialId === testimonial.id 
+                    ? 'scale-125 shadow-3xl ring-4 ring-amber-400' 
+                    : activeTestimonialId && activeTestimonialId !== testimonial.id
+                    ? 'scale-90 opacity-40 hover:opacity-70'
+                    : 'hover:shadow-3xl hover:scale-105 hover:opacity-100'
+                }`}
+                style={{ 
+                  zIndex: activeTestimonialId === testimonial.id ? 100 : activeTestimonialId ? 1 : 10,
+                  transform: activeTestimonialId === testimonial.id 
+                    ? 'translate(-50%, -50%) scale(1.25)' 
+                    : activeTestimonialId && activeTestimonialId !== testimonial.id
+                    ? 'translate(-50%, -50%) scale(0.9)'
+                    : 'translate(-50%, -50%)'
+                }}
+              >
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-white font-bold">
+                      {testimonial.initials}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-blue-900">{maskName(testimonial.name)}</p>
+                    <Quote className="w-4 h-4 text-amber-500" />
+                  </div>
                 </div>
-                <Quote className="w-6 h-6 text-amber-500 mx-auto mb-3" />
-                <p className="text-gray-700 text-sm leading-relaxed mb-4 text-center">
+                
+                {/* Yıldız Rating Gösterimi */}
+                {testimonial.rating && (
+                  <div className="flex items-center mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${
+                          star <= testimonial.rating! 
+                            ? 'text-amber-400 fill-amber-400' 
+                            : 'text-gray-300'
+                        }`}
+                        fill={star <= testimonial.rating! ? '#fbbf24' : 'none'}
+                      />
+                    ))}
+                    <span className="ml-2 text-sm text-gray-600 font-medium">
+                      ({testimonial.rating}/5)
+                    </span>
+                  </div>
+                )}
+                
+                <p className="text-gray-700 leading-relaxed">
                   "{testimonial.comment}"
                 </p>
-                <p className="text-blue-900 font-semibold text-center text-sm">
-                  - {maskName(testimonial.name)}
-                </p>
-
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Static testimonials for mobile */}
-        <div className="md:hidden grid grid-cols-1 gap-6 mt-8">
-          {activeTestimonials.map((testimonial) => (
-            <div key={`mobile-${testimonial.id}`} className="bg-white rounded-2xl p-6 shadow-xl">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-white font-bold">
-                    {testimonial.initials}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-semibold text-blue-900">{maskName(testimonial.name)}</p>
-                  <Quote className="w-4 h-4 text-amber-500" />
-                </div>
-              </div>
-              <p className="text-gray-700 leading-relaxed">
-                "{testimonial.comment}"
-              </p>
             </div>
           ))}
         </div>

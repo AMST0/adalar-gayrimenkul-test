@@ -76,7 +76,7 @@ const AllAgents: React.FC = () => {
                 <p className="text-gray-600 mb-3 text-sm">{agent.title}</p>
                 
                 <div className="flex flex-wrap gap-1 mb-4">
-                  {agent.specialties.slice(0, 2).map((specialty, idx) => (
+                  {(agent.specialties || []).slice(0, 2).map((specialty, idx) => (
                     <span
                       key={idx}
                       className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium"
@@ -222,7 +222,7 @@ const AllAgents: React.FC = () => {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

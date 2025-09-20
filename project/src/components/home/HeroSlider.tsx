@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight, Star, TrendingUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, TrendingUp } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 
 const HeroSlider: React.FC = () => {
@@ -117,33 +117,33 @@ const HeroSlider: React.FC = () => {
       {/* Enhanced Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-4 rounded-full transition-all duration-300 hover:scale-110 border border-white/20"
+        className="absolute left-2 sm:left-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 sm:p-4 rounded-full transition-all duration-300 hover:scale-110 border border-white/20"
       >
-        <ChevronLeft className="w-8 h-8" />
+        <ChevronLeft className="w-4 h-4 sm:w-8 sm:h-8" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-4 rounded-full transition-all duration-300 hover:scale-110 border border-white/20"
+        className="absolute right-2 sm:right-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 sm:p-4 rounded-full transition-all duration-300 hover:scale-110 border border-white/20"
       >
-        <ChevronRight className="w-8 h-8" />
+        <ChevronRight className="w-4 h-4 sm:w-8 sm:h-8" />
       </button>
 
       {/* Enhanced Dots Indicator */}
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-4">
+      <div className="absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-4">
         {activeSlides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`transition-all duration-300 rounded-full ${
               index === currentSlide 
-                ? 'w-12 h-4 bg-red-600 shadow-lg' 
-                : 'w-4 h-4 bg-white/50 hover:bg-white/75 hover:scale-125'
+                ? 'w-8 sm:w-12 h-3 sm:h-4 bg-red-600 shadow-lg' 
+                : 'w-3 sm:w-4 h-3 sm:h-4 bg-white/50 hover:bg-white/75 hover:scale-125'
             }`}
           />
         ))}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in-delay {
           0% {
             opacity: 0;

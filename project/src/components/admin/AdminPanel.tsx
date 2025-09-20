@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAdmin } from '../../contexts/AdminContext';
-import { Agent, Property, Project, Testimonial, SliderItem, ContactRequest } from '../../types';
+import { Agent, Property } from '../../types';
 import Button from '../common/Button';
 
 
@@ -31,16 +31,15 @@ const AdminPanel: React.FC = () => {
   const {
     agents,
     properties,
-    projects,
     testimonials,
-    sliderItems,
     contactRequests,
     updateAgents,
     updateProperties,
-    updateProjects,
     updateTestimonials,
-    updateSliderItems,
     updateContactRequests,
+    deleteAgent,
+    deleteProperty,
+    deleteTestimonial,
   } = useData();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -72,10 +71,21 @@ const AdminPanel: React.FC = () => {
     updateFunction(updated);
   };
 
-  const handleDelete = (items: any[], updateFunction: Function, id: string) => {
-    if (window.confirm('Bu öğeyi silmek istediğinizden emin misiniz?')) {
-      const updated = items.filter(item => item.id !== id);
-      updateFunction(updated);
+  const handleDeleteAgent = (id: string) => {
+    if (window.confirm('Bu danışmanı silmek istediğinizden emin misiniz?')) {
+      deleteAgent(id);
+    }
+  };
+
+  const handleDeleteProperty = (id: string) => {
+    if (window.confirm('Bu mülkü silmek istediğinizden emin misiniz?')) {
+      deleteProperty(id);
+    }
+  };
+
+  const handleDeleteTestimonial = (id: string) => {
+    if (window.confirm('Bu yorumu silmek istediğinizden emin misiniz?')) {
+      deleteTestimonial(id);
     }
   };
 
@@ -96,41 +106,41 @@ const AdminPanel: React.FC = () => {
   };
 
   const renderDashboard = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="bg-blue-500 text-white p-6 rounded-lg">
-        <div className="flex items-center justify-between">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="bg-blue-500 text-white p-4 md:p-6 rounded-lg">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
           <div>
-            <p className="text-blue-100">Toplam Danışman</p>
-            <p className="text-3xl font-bold">{agents.filter(a => a.isActive).length}</p>
+            <p className="text-blue-100 text-sm md:text-base">Toplam Danışman</p>
+            <p className="text-2xl md:text-3xl font-bold">{agents.filter(a => a.isActive).length}</p>
           </div>
-          <Users className="w-12 h-12 text-blue-200" />
+          <Users className="w-8 h-8 md:w-12 md:h-12 text-blue-200 mt-2 md:mt-0" />
         </div>
       </div>
-      <div className="bg-green-500 text-white p-6 rounded-lg">
-        <div className="flex items-center justify-between">
+      <div className="bg-green-500 text-white p-4 md:p-6 rounded-lg">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
           <div>
-            <p className="text-green-100">Aktif Arsalar</p>
-            <p className="text-3xl font-bold">{properties.filter(p => p.isActive).length}</p>
+            <p className="text-green-100 text-sm md:text-base">Aktif Arsalar</p>
+            <p className="text-2xl md:text-3xl font-bold">{properties.filter(p => p.isActive).length}</p>
           </div>
-          <Building className="w-12 h-12 text-green-200" />
+          <Building className="w-8 h-8 md:w-12 md:h-12 text-green-200 mt-2 md:mt-0" />
         </div>
       </div>
-      <div className="bg-red-500 text-white p-6 rounded-lg">
-        <div className="flex items-center justify-between">
+      <div className="bg-red-500 text-white p-4 md:p-6 rounded-lg">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
           <div>
-            <p className="text-red-100">Yeni Mesajlar</p>
-            <p className="text-3xl font-bold">{contactRequests.filter(r => !r.isRead).length}</p>
+            <p className="text-red-100 text-sm md:text-base">Yeni Mesajlar</p>
+            <p className="text-2xl md:text-3xl font-bold">{contactRequests.filter(r => !r.isRead).length}</p>
           </div>
-          <Mail className="w-12 h-12 text-red-200" />
+          <Mail className="w-8 h-8 md:w-12 md:h-12 text-red-200 mt-2 md:mt-0" />
         </div>
       </div>
-      <div className="bg-purple-500 text-white p-6 rounded-lg">
-        <div className="flex items-center justify-between">
+      <div className="bg-purple-500 text-white p-4 md:p-6 rounded-lg">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
           <div>
-            <p className="text-purple-100">Aktif Yorumlar</p>
-            <p className="text-3xl font-bold">{testimonials.filter(t => t.isActive).length}</p>
+            <p className="text-purple-100 text-sm md:text-base">Aktif Yorumlar</p>
+            <p className="text-2xl md:text-3xl font-bold">{testimonials.filter(t => t.isActive).length}</p>
           </div>
-          <MessageSquare className="w-12 h-12 text-purple-200" />
+          <MessageSquare className="w-8 h-8 md:w-12 md:h-12 text-purple-200 mt-2 md:mt-0" />
         </div>
       </div>
     </div>
@@ -138,48 +148,48 @@ const AdminPanel: React.FC = () => {
 
   const renderAgents = () => (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Danışman Yönetimi</h2>
-        <Button onClick={() => { setEditingItem({}); setShowForm(true); }}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+        <h2 className="text-xl sm:text-2xl font-bold">Danışman Yönetimi</h2>
+        <Button onClick={() => { setEditingItem({}); setShowForm(true); }} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Yeni Danışman
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {agents.map((agent) => (
-          <div key={agent.id} className="bg-white p-6 rounded-lg shadow-md border">
-            <div className="flex items-center justify-between mb-4">
-              <img src={agent.image} alt={agent.name} className="w-12 h-12 rounded-full object-cover" />
-              <div className="flex space-x-2">
+          <div key={agent.id} className="bg-white p-4 md:p-6 rounded-lg shadow-md border">
+            <div className="flex items-start justify-between mb-4">
+              <img src={agent.image} alt={agent.name} className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
+              <div className="flex space-x-1 md:space-x-2">
                 <button
                   onClick={() => handleToggleActive(agents, updateAgents, agent.id)}
-                  className={`p-2 rounded ${agent.isActive ? 'text-green-600' : 'text-gray-400'}`}
+                  className={`p-1.5 md:p-2 rounded ${agent.isActive ? 'text-green-600' : 'text-gray-400'}`}
                 >
-                  {agent.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  {agent.isActive ? <Eye className="w-3 h-3 md:w-4 md:h-4" /> : <EyeOff className="w-3 h-3 md:w-4 md:h-4" />}
                 </button>
                 <button
                   onClick={() => { setEditingItem(agent); setShowForm(true); }}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                  className="p-1.5 md:p-2 text-blue-600 hover:bg-blue-50 rounded"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
                 <button
-                  onClick={() => handleDelete(agents, updateAgents, agent.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  onClick={() => handleDeleteAgent(agent.id)}
+                  className="p-1.5 md:p-2 text-red-600 hover:bg-red-50 rounded"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
               </div>
             </div>
-            <h3 className="font-bold text-lg mb-2">{agent.name}</h3>
-            <p className="text-gray-600 mb-2">{agent.title}</p>
-            <p className="text-sm text-gray-500">{agent.experience}</p>
+            <h3 className="font-bold text-base md:text-lg mb-2">{agent.name}</h3>
+            <p className="text-gray-600 mb-2 text-sm md:text-base">{agent.title}</p>
+            <p className="text-xs md:text-sm text-gray-500">{agent.experience}</p>
             <div className="flex items-center mt-2">
-              <Phone className="w-4 h-4 mr-1 text-gray-400" />
-              <span className="text-sm">{agent.phone}</span>
+              <Phone className="w-3 h-3 md:w-4 md:h-4 mr-1 text-gray-400" />
+              <span className="text-xs md:text-sm">{agent.phone}</span>
             </div>
-            {agent.isFeatured && <Star className="w-4 h-4 text-yellow-500 mt-2" />}
+            {agent.isFeatured && <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-500 mt-2" />}
           </div>
         ))}
       </div>
@@ -223,7 +233,7 @@ const AdminPanel: React.FC = () => {
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleDelete(properties, updateProperties, property.id)}
+                  onClick={() => handleDeleteProperty(property.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -261,27 +271,43 @@ const AdminPanel: React.FC = () => {
   return (
     <div className="pt-24 pb-16 min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-900">Admin Panel</h1>
-          <Button variant="danger" onClick={logout}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-blue-900">Admin Panel</h1>
+          <Button variant="danger" onClick={logout} className="w-full sm:w-auto">
             Çıkış Yap
           </Button>
         </div>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="flex border-b">
+          {/* Mobile Tab Navigation */}
+          <div className="sm:hidden">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="w-full p-4 text-lg font-semibold bg-blue-900 text-white border-0 outline-none"
+            >
+              {tabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Desktop Tab Navigation */}
+          <div className="hidden sm:flex border-b overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-4 font-semibold transition-colors ${
+                className={`flex items-center space-x-2 px-4 lg:px-6 py-4 font-semibold transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-blue-900 text-white'
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <tab.icon className="w-5 h-5" />
-                <span>{tab.label}</span>
+                <span className="hidden lg:inline">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -317,7 +343,7 @@ const AdminPanel: React.FC = () => {
                               {t.rating ? (
                                 <span className="flex items-center gap-1">
                                   {[1,2,3,4,5].map(i => (
-                                    <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i <= t.rating ? '#fbbf24' : 'none'} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i <= (t.rating || 0) ? '#fbbf24' : 'none'} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                   ))}
                                 </span>
                               ) : '-'}
@@ -330,15 +356,24 @@ const AdminPanel: React.FC = () => {
                               )}
                             </td>
                             <td className="px-4 py-2 border-b">
-                              <button
-                                className={`px-3 py-1 rounded font-bold text-xs ${t.isActive ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                                onClick={() => {
-                                  const updated = testimonials.map(item => item.id === t.id ? { ...item, isActive: !item.isActive } : item);
-                                  updateTestimonials(updated);
-                                }}
-                              >
-                                {t.isActive ? 'Yayından Kaldır' : 'Yayınla'}
-                              </button>
+                              <div className="flex space-x-2">
+                                <button
+                                  className={`px-3 py-1 rounded font-bold text-xs ${t.isActive ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                                  onClick={() => {
+                                    const updated = testimonials.map(item => item.id === t.id ? { ...item, isActive: !item.isActive } : item);
+                                    updateTestimonials(updated);
+                                  }}
+                                >
+                                  {t.isActive ? 'Yayından Kaldır' : 'Yayınla'}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTestimonial(t.id)}
+                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                  title="Sil"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
