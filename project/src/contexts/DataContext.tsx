@@ -16,6 +16,7 @@ interface DataContextType {
   updateProjects: (projects: Project[]) => void;
   updateTestimonials: (testimonials: Testimonial[]) => void;
   updateSliderItems: (items: SliderItem[]) => void;
+  addSliderItem: (item: Omit<SliderItem, 'id'>) => Promise<void>;
   deleteAgent: (id: string) => void;
   deleteProperty: (id: string) => void;
   deleteTestimonial: (id: string) => void;
@@ -382,6 +383,48 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Slider item ekleme fonksiyonu
+  const addSliderItem = async (item: Omit<SliderItem, 'id'>) => {
+    const newId = Date.now().toString();
+    const newSliderItem: SliderItem = {
+      ...item,
+      id: newId
+    };
+    
+    const updatedSliderItems = [...sliderItems, newSliderItem];
+    setSliderItems(updatedSliderItems);
+    setStorageItem(STORAGE_KEYS.SLIDER, updatedSliderItems);
+    
+    // Supabase'e de ekle
+    try {
+      const { data } = await dbHelpers.addSliderItem({
+        title: item.title,
+        subtitle: item.subtitle,
+        location: item.location,
+        image: item.image,
+        sort_order: updatedSliderItems.length,
+        is_active: item.isActive || false
+      });
+      
+      if (data && data.length > 0) {
+        // Supabase'den gelen ID ile güncelle
+        const supabaseSliderItem: SliderItem = {
+          ...item,
+          id: data[0].id + '-supabase'
+        };
+        
+        const updatedWithSupabaseId = updatedSliderItems.map(slideItem => 
+          slideItem.id === newId ? supabaseSliderItem : slideItem
+        );
+        
+        setSliderItems(updatedWithSupabaseId);
+        setStorageItem(STORAGE_KEYS.SLIDER, updatedWithSupabaseId);
+      }
+    } catch (error) {
+      console.log('Supabase slider item ekleme hatası:', error);
+    }
+  };
+
   // Admin için tüm testimonials'ları yükle (aktif/pasif fark etmeksizin)
   const loadAllTestimonialsForAdmin = async () => {
     try {
@@ -425,6 +468,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateProjects,
         updateTestimonials,
         updateSliderItems,
+        addSliderItem,
         deleteAgent,
         deleteProperty,
         deleteTestimonial,

@@ -44,6 +44,7 @@ const AdminPanel: React.FC = () => {
     loadAllTestimonialsForAdmin,
     sliderItems,
     updateSliderItems,
+    addSliderItem,
   } = useData();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -557,11 +558,124 @@ const AdminPanel: React.FC = () => {
         ))}
       </div>
 
-      <p className="text-gray-500 text-center mt-8">
-        💡 Slider yönetimi henüz geliştiriliyor. Yakında kullanıma açılacak!
-      </p>
+      {showForm && activeTab === 'slider' && renderSliderForm()}
     </div>
   );
+
+  const renderSliderForm = () => {
+    const handleSliderSave = async (e: React.FormEvent) => {
+      e.preventDefault();
+      const formData = new FormData(e.target as HTMLFormElement);
+      
+      const sliderData = {
+        title: formData.get('title') as string,
+        subtitle: formData.get('subtitle') as string,
+        location: formData.get('location') as string,
+        image: formData.get('image') as string,
+        isActive: formData.get('isActive') === 'on'
+      };
+
+      if (editingItem && editingItem.id) {
+        // Edit existing slider
+        const updated = sliderItems.map(item =>
+          item.id === editingItem.id ? { ...sliderData, id: editingItem.id } : item
+        );
+        updateSliderItems(updated);
+      } else {
+        // Add new slider
+        await addSliderItem(sliderData);
+      }
+      
+      setShowForm(false);
+      setEditingItem(null);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <h3 className="text-lg font-semibold mb-4">
+            {editingItem?.id ? 'Slide Düzenle' : 'Yeni Slide Ekle'}
+          </h3>
+          
+          <form onSubmit={handleSliderSave} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Başlık</label>
+              <input
+                type="text"
+                name="title"
+                defaultValue={editingItem?.title || ''}
+                required
+                className="w-full p-2 border rounded"
+                placeholder="ADALAR GAYRİMENKUL"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Alt Başlık</label>
+              <input
+                type="text"
+                name="subtitle"
+                defaultValue={editingItem?.subtitle || ''}
+                required
+                className="w-full p-2 border rounded"
+                placeholder="Geleceğin değerli toprakları"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Lokasyon</label>
+              <input
+                type="text"
+                name="location"
+                defaultValue={editingItem?.location || ''}
+                required
+                className="w-full p-2 border rounded"
+                placeholder="NİDAPARK"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Görsel URL</label>
+              <input
+                type="url"
+                name="image"
+                defaultValue={editingItem?.image || ''}
+                required
+                className="w-full p-2 border rounded"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="isActive"
+                defaultChecked={editingItem?.isActive || false}
+                className="mr-2"
+              />
+              <label className="text-sm font-medium">Aktif</label>
+            </div>
+            
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="submit"
+                className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+              >
+                Kaydet
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowForm(false); setEditingItem(null); }}
+                className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+              >
+                İptal
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="pt-24 pb-16 min-h-screen bg-gray-100">

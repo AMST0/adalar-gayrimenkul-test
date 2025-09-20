@@ -157,6 +157,14 @@ export const dbHelpers = {
     return { data: data || [], error }
   },
 
+  async addSliderItem(item: any) {
+    const { data, error } = await supabase
+      .from('slider_items')
+      .insert([item])
+      .select()
+    return { data, error }
+  },
+
   async updateSliderItem(id: string, item: any) {
     const { data, error } = await supabase
       .from('slider_items')
