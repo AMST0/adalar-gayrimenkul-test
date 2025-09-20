@@ -90,6 +90,15 @@ export const dbHelpers = {
     return { data: data || [], error }
   },
 
+  // Admin için tüm testimonials (aktif/pasif fark etmeksizin)
+  async getAllTestimonials() {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('*')
+      .order('created_at', { ascending: false })
+    return { data: data || [], error }
+  },
+
   async addTestimonial(testimonial: any) {
     const { data, error } = await supabase
       .from('testimonials')

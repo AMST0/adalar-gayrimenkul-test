@@ -99,25 +99,21 @@ const FeaturedAgentCards: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* View Profile Button & Portfolio Link */}
-                  <div className="mt-6 space-y-2">
+                  {/* Portfolio Link */}
+                  <div className="mt-6">
                     <a
-                      href={`/danismanlar/${agent.id}`}
-                      className="w-full block bg-gradient-to-r from-blue-900 to-blue-800 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-800 hover:to-blue-700 transition-all duration-300 text-center transform hover:scale-105"
+                      href={agent.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full block py-4 px-6 rounded-lg transition-transform duration-300 text-center transform hover:scale-105 flex items-center justify-center min-h-[60px]"
+                      style={{ backgroundColor: 'rgba(253, 231, 4)' }}
                     >
-                      Profili İncele
+                      <img 
+                        src="https://i.tgrthaber.com/images/haberler/2021_09/xbuyuk/sahibinden-kimin-kime-ait-taner-aksoy-kimdir--1632839994.jpg"
+                        alt="Sahibinden.com Portföyü"
+                        className="h-10 w-full object-contain rounded"
+                      />
                     </a>
-                    {/* Sahibinden Portföyü butonu */}
-                    {agent.portfolioUrl && (
-                      <a
-                        href={agent.portfolioUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full block bg-gradient-to-r from-yellow-500 to-yellow-400 text-blue-900 py-3 px-6 rounded-lg font-semibold hover:from-yellow-400 hover:to-yellow-300 transition-all duration-300 text-center transform hover:scale-105"
-                      >
-                        Sahibinden Portföyü
-                      </a>
-                    )}
                   </div>
                 </div>
               </div>
@@ -126,7 +122,7 @@ const FeaturedAgentCards: React.FC = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

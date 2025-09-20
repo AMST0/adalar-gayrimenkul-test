@@ -105,10 +105,17 @@ const AllAgents: React.FC = () => {
                     Ara
                   </a>
                   <a
-                    href={`/danismanlar/${agent.id}`}
-                    className="flex-1 border-2 border-blue-900 text-blue-900 py-2 px-3 rounded-lg font-semibold hover:bg-blue-900 hover:text-white transition-colors duration-300 text-center text-sm"
+                    href={agent.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 px-3 rounded-lg transition-transform duration-300 text-center text-sm flex items-center justify-center min-h-[44px] hover:scale-105"
+                    style={{ backgroundColor: 'rgba(253, 231, 4)' }}
                   >
-                    Profil
+                    <img 
+                      src="https://i.tgrthaber.com/images/haberler/2021_09/xbuyuk/sahibinden-kimin-kime-ait-taner-aksoy-kimdir--1632839994.jpg"
+                      alt="Sahibinden.com Portföyü"
+                      className="h-10 w-full object-contain rounded"
+                    />
                   </a>
                 </div>
               </div>
@@ -148,10 +155,17 @@ const AllAgents: React.FC = () => {
                             Ara
                           </a>
                           <a
-                            href={`/danismanlar/${agent.id}`}
-                            className="flex-1 border border-blue-900 text-blue-900 py-2 px-3 rounded-lg text-center text-sm font-semibold"
+                            href={agent.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-2 px-3 rounded-lg transition-transform duration-300 text-center text-sm font-semibold flex items-center justify-center min-h-[44px] hover:scale-105"
+                            style={{ backgroundColor: 'rgba(253, 231, 4)' }}
                           >
-                            Profil
+                            <img 
+                              src="https://i.tgrthaber.com/images/haberler/2021_09/xbuyuk/sahibinden-kimin-kime-ait-taner-aksoy-kimdir--1632839994.jpg"
+                              alt="Sahibinden.com"
+                              className="h-9 w-full object-contain rounded"
+                            />
                           </a>
                         </div>
                       </div>

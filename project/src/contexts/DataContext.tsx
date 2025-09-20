@@ -21,6 +21,7 @@ interface DataContextType {
   deleteTestimonial: (id: string) => void;
   addContactRequest: (request: Omit<ContactRequest, 'id' | 'date' | 'isRead'>) => void;
   updateContactRequests: (requests: ContactRequest[]) => void;
+  loadAllTestimonialsForAdmin: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -64,13 +65,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           contactRequests: contactRequestsResult
         });
 
-        // Supabase'den veri geldi mi kontrol et
-        if (agentsResult.data && agentsResult.data.length > 0) {
-          console.log('✅ Supabase\'den veriler yüklendi', agentsResult.data.length, 'agents bulundu');
+        // Supabase'den veri geldi mi kontrol et (herhangi bir tablo veri döndürdüyse)
+        const hasSupabaseData = (agentsResult.data && agentsResult.data.length > 0) ||
+                               (testimonialsResult.data && testimonialsResult.data.length > 0) ||
+                               (propertiesResult.data && propertiesResult.data.length > 0) ||
+                               (projectsResult.data && projectsResult.data.length > 0) ||
+                               (sliderItemsResult.data && sliderItemsResult.data.length > 0) ||
+                               (contactRequestsResult.data && contactRequestsResult.data.length > 0);
+
+        if (hasSupabaseData) {
+          console.log('✅ Supabase\'den veriler yüklendi');
           
-          // Supabase verilerini TypeScript tiplerle eşle
-          const mappedAgents = agentsResult.data.map((agent: any) => ({
-            id: agent.id,
+          // Supabase verilerini TypeScript tiplerle eşle (ID'lere -supabase eki ekle)
+          const mappedAgents = (agentsResult.data || []).map((agent: any) => ({
+            id: agent.id + '-supabase',
             name: agent.name,
             title: agent.title,
             image: agent.image,
@@ -80,11 +88,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             specialties: agent.specialties || ['Gayrimenkul Danışmanlığı'], // Fallback
             isActive: agent.is_active,
             isFeatured: agent.is_featured,
-            portfolioUrl: agent.portfolio_url
+            portfolioUrl: agent.portfolio_url || 'https://adalargayrimenkul.sahibinden.com/'
           }));
 
           const mappedTestimonials = (testimonialsResult.data || []).map((testimonial: any) => ({
-            id: testimonial.id,
+            id: testimonial.id + '-supabase',
             name: testimonial.name,
             initials: testimonial.initials,
             comment: testimonial.comment,
@@ -93,7 +101,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }));
 
           const mappedProperties = (propertiesResult.data || []).map((property: any) => ({
-            id: property.id,
+            id: property.id + '-supabase',
             title: property.title,
             location: property.location,
             size: property.size, // Artık VARCHAR formatında "300 m²"
@@ -105,13 +113,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }));
 
           const mappedProjects = (projectsResult.data || []).map((project: any) => ({
-            id: project.id,
+            id: project.id + '-supabase',
             logo: project.logo,
             isActive: project.is_active
           }));
 
           const mappedSliderItems = (sliderItemsResult.data || []).map((item: any) => ({
-            id: item.id,
+            id: item.id + '-supabase',
             title: item.title,
             subtitle: item.subtitle,
             location: item.location,
@@ -120,7 +128,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }));
 
           const mappedContactRequests = (contactRequestsResult.data || []).map((request: any) => ({
-            id: request.id,
+            id: request.id + '-supabase',
             name: request.name,
             email: request.email,
             phone: request.phone || '',
@@ -135,10 +143,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setTestimonials(mappedTestimonials);
           setSliderItems(mappedSliderItems);
           setContactRequests(mappedContactRequests);
+          
+          console.log('📊 DataContext state güncellendi:', {
+            agents: mappedAgents.length,
+            properties: mappedProperties.length,
+            projects: mappedProjects.length,
+            testimonials: mappedTestimonials.length,
+            sliderItems: mappedSliderItems.length,
+            contactRequests: mappedContactRequests.length
+          });
         } else {
-          // Supabase'de veri yok, fallback olarak localStorage kullan
-          console.log('⚠️ Supabase\'de veri yok, localStorage kullanılıyor');
-          console.log('agentsResult:', agentsResult);
+          // Supabase'de veri yok veya bağlantı sorunu var, fallback olarak localStorage + mockData kullan
+          console.log('⚠️ Supabase\'de veri yok veya bağlantı sorunu, localStorage + mockData kullanılıyor');
+          console.log('Supabase sonuçları:', { agentsResult, testimonialsResult, propertiesResult });
+          
           const loadedAgents = getStorageItem(STORAGE_KEYS.AGENTS, mockAgents);
           const loadedProperties = getStorageItem(STORAGE_KEYS.PROPERTIES, mockProperties);
           const loadedProjects = getStorageItem(STORAGE_KEYS.PROJECTS, mockProjects);
@@ -187,11 +205,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setAgents(newAgents);
     setStorageItem(STORAGE_KEYS.AGENTS, newAgents);
     
-    // Supabase'e de kaydet
+    // Sadece mevcut Supabase kayıtlarını güncelle, yeni ekleme yapma
     try {
       for (const agent of newAgents) {
         if (agent.id.includes('-supabase')) {
-          // Mevcut Supabase kaydını güncelle
+          // Sadece mevcut Supabase kaydını güncelle
           await dbHelpers.updateAgent(agent.id.replace('-supabase', ''), {
             name: agent.name,
             title: agent.title,
@@ -204,6 +222,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             is_active: agent.isActive
           });
         }
+        // Yeni ekleme kısmını kaldırdık - sadece direkt Supabase'a ekleme yapılacak
       }
     } catch (error) {
       console.log('Supabase agent güncelleme hatası:', error);
@@ -214,11 +233,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setProperties(newProperties);
     setStorageItem(STORAGE_KEYS.PROPERTIES, newProperties);
     
-    // Supabase'e de kaydet
+    // Sadece mevcut Supabase kayıtlarını güncelle, yeni ekleme yapma
     try {
       for (const property of newProperties) {
         if (property.id.includes('-supabase')) {
-          // Mevcut Supabase kaydını güncelle
+          // Sadece mevcut Supabase kaydını güncelle
           await dbHelpers.updateProperty(property.id.replace('-supabase', ''), {
             title: property.title,
             location: property.location,
@@ -231,6 +250,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             is_active: property.isActive
           });
         }
+        // Yeni ekleme kısmını kaldırdık - sadece direkt Supabase'a ekleme yapılacak
       }
     } catch (error) {
       console.log('Supabase property güncelleme hatası:', error);
@@ -246,11 +266,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setTestimonials(newTestimonials);
     setStorageItem(STORAGE_KEYS.TESTIMONIALS, newTestimonials);
     
-    // Supabase'e de kaydet
+    // Sadece mevcut Supabase kayıtlarını güncelle, yeni ekleme yapma
     try {
       for (const testimonial of newTestimonials) {
         if (testimonial.id.includes('-supabase')) {
-          // Mevcut Supabase kaydını güncelle
+          // Sadece mevcut Supabase kaydını güncelle
           await dbHelpers.updateTestimonial(testimonial.id.replace('-supabase', ''), {
             name: testimonial.name,
             initials: testimonial.initials,
@@ -258,16 +278,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             rating: testimonial.rating,
             is_active: testimonial.isActive
           });
-        } else if (!testimonial.id.includes('fallback')) {
-          // Yeni kayıt ekle
-          await dbHelpers.addTestimonial({
-            name: testimonial.name,
-            initials: testimonial.initials,
-            comment: testimonial.comment,
-            rating: testimonial.rating,
-            is_active: testimonial.isActive || false
-          });
         }
+        // Yeni ekleme kısmını kaldırdık - sadece direkt Supabase'a ekleme yapılacak
       }
     } catch (error) {
       console.log('Supabase testimonial güncelleme hatası:', error);
@@ -370,6 +382,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Admin için tüm testimonials'ları yükle (aktif/pasif fark etmeksizin)
+  const loadAllTestimonialsForAdmin = async () => {
+    try {
+      console.log('🔄 Admin için tüm testimonials yükleniyor...');
+      const { data, error } = await dbHelpers.getAllTestimonials();
+      
+      if (error) {
+        console.error('❌ Admin testimonials yükleme hatası:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const mappedTestimonials = data.map((testimonial: any) => ({
+          id: testimonial.id + '-supabase',
+          name: testimonial.name,
+          initials: testimonial.initials,
+          comment: testimonial.comment,
+          rating: testimonial.rating,
+          isActive: testimonial.is_active
+        }));
+        
+        console.log('✅ Admin testimonials yüklendi:', mappedTestimonials);
+        setTestimonials(mappedTestimonials);
+      }
+    } catch (error) {
+      console.error('❌ Admin testimonials yükleme hatası:', error);
+    }
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -389,6 +430,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         deleteTestimonial,
         addContactRequest,
         updateContactRequests,
+        loadAllTestimonialsForAdmin,
       }}
     >
       {children}

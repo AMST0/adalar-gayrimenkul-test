@@ -21,6 +21,7 @@ import { useData } from '../../contexts/DataContext';
 import { useAdmin } from '../../contexts/AdminContext';
 import { Agent, Property } from '../../types';
 import Button from '../common/Button';
+import { dbHelpers } from '../../utils/supabaseClient-new';
 
 
 import { useEffect } from 'react';
@@ -40,20 +41,135 @@ const AdminPanel: React.FC = () => {
     deleteAgent,
     deleteProperty,
     deleteTestimonial,
+    loadAllTestimonialsForAdmin,
+    sliderItems,
+    updateSliderItems,
   } = useData();
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Başarı mesajını göster ve 3 saniye sonra gizle
+  const showSuccessMessage = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
 
   // İletişim taleplerini otomatik güncelle
   useEffect(() => {
-    const interval = setInterval(() => {
-      const latest = getStorageItem(STORAGE_KEYS.CONTACT_REQUESTS, []);
-      updateContactRequests(latest);
-    }, 2000); // 2 saniyede bir güncelle
+    const interval = setInterval(async () => {
+      try {
+        // Sadece ilgili tab açıkken güncelle
+        if (activeTab === 'testimonials') {
+          const { data: testimonialsData, error: testimonialsError } = await dbHelpers.getAllTestimonials();
+          if (!testimonialsError && testimonialsData) {
+            const mappedTestimonials = testimonialsData.map((testimonial: any) => ({
+              id: testimonial.id + '-supabase',
+              name: testimonial.name,
+              initials: testimonial.initials,
+              comment: testimonial.comment,
+              rating: testimonial.rating,
+              isActive: testimonial.is_active
+            }));
+            
+            // Önceki veri ile karşılaştır, gerçekten değiştiyse güncelle
+            const currentSupabaseIds = testimonials
+              .filter(t => t.id.includes('-supabase'))
+              .map(t => t.id)
+              .sort();
+            const newSupabaseIds = mappedTestimonials
+              .map(t => t.id)
+              .sort();
+            
+            if (JSON.stringify(currentSupabaseIds) !== JSON.stringify(newSupabaseIds)) {
+              updateTestimonials(mappedTestimonials);
+              console.log('🔄 Admin Panel: Testimonials güncellendi', mappedTestimonials.length, 'adet');
+            }
+          }
+        }
+        
+        // Agents tab'ı için
+        if (activeTab === 'agents') {
+          const { data: agentsData, error: agentsError } = await dbHelpers.getAgents();
+          if (!agentsError && agentsData) {
+            const mappedAgents = agentsData.map((agent: any) => ({
+              id: agent.id + '-supabase',
+              name: agent.name,
+              title: agent.title,
+              image: agent.image,
+              phone: agent.phone,
+              email: agent.email,
+              experience: agent.experience,
+              specialties: agent.specialties || ['Gayrimenkul Danışmanlığı'],
+              isActive: agent.is_active,
+              isFeatured: agent.is_featured,
+              portfolioUrl: agent.portfolio_url || 'https://adalargayrimenkul.sahibinden.com/'
+            }));
+            
+            const currentAgentIds = agents
+              .filter(a => a.id.includes('-supabase'))
+              .map(a => a.id)
+              .sort();
+            const newAgentIds = mappedAgents
+              .map(a => a.id)
+              .sort();
+            
+            if (JSON.stringify(currentAgentIds) !== JSON.stringify(newAgentIds)) {
+              updateAgents(mappedAgents);
+              console.log('🔄 Admin Panel: Agents güncellendi', mappedAgents.length, 'adet');
+            }
+          }
+        }
+        
+        // Properties tab'ı için
+        if (activeTab === 'properties') {
+          const { data: propertiesData, error: propertiesError } = await dbHelpers.getProperties();
+          if (!propertiesError && propertiesData) {
+            const mappedProperties = propertiesData.map((property: any) => ({
+              id: property.id + '-supabase',
+              title: property.title,
+              location: property.location,
+              size: property.size,
+              price: property.price,
+              image: property.image,
+              description: property.description,
+              isActive: property.is_active,
+              isFeatured: property.is_featured
+            }));
+            
+            const currentPropertyIds = properties
+              .filter(p => p.id.includes('-supabase'))
+              .map(p => p.id)
+              .sort();
+            const newPropertyIds = mappedProperties
+              .map(p => p.id)
+              .sort();
+            
+            if (JSON.stringify(currentPropertyIds) !== JSON.stringify(newPropertyIds)) {
+              updateProperties(mappedProperties);
+              console.log('🔄 Admin Panel: Properties güncellendi', mappedProperties.length, 'adet');
+            }
+          }
+        }
+
+        // Contact requests'i güncelle
+        const latest = getStorageItem(STORAGE_KEYS.CONTACT_REQUESTS, []);
+        updateContactRequests(latest);
+      } catch (error) {
+        console.error('Admin panel auto-refresh hatası:', error);
+      }
+    }, 5000); // 5 saniyede bir güncelle (daha az sıklık)
     return () => clearInterval(interval);
-  }, [updateContactRequests]);
+  }, [updateTestimonials, updateContactRequests, updateAgents, updateProperties, testimonials, agents, properties, activeTab]);
+
+  // Testimonials tab'ına geçildiğinde tüm testimonials'ları yükle
+  useEffect(() => {
+    if (activeTab === 'testimonials') {
+      loadAllTestimonialsForAdmin();
+    }
+  }, [activeTab, loadAllTestimonialsForAdmin]);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
@@ -83,26 +199,142 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleDeleteTestimonial = (id: string) => {
+  const handleDeleteTestimonial = async (id: string) => {
     if (window.confirm('Bu yorumu silmek istediğinizden emin misiniz?')) {
-      deleteTestimonial(id);
+      try {
+        // Supabase'dan sil
+        const realId = id.replace('-supabase', '');
+        const { error } = await dbHelpers.deleteTestimonial(realId);
+        
+        if (error) {
+          console.error('Supabase yorum silme hatası:', error);
+          alert('Yorum silinirken bir hata oluştu.');
+          return;
+        }
+        
+        console.log('✅ Yorum başarıyla Supabase\'dan silindi');
+        
+        // Local state'i güncelle
+        deleteTestimonial(id);
+      } catch (error) {
+        console.error('Beklenmeyen hata:', error);
+        alert('Yorum silinirken bir hata oluştu.');
+      }
     }
   };
 
-  const handleSave = (items: any[], updateFunction: Function, newItem: any) => {
-    if (editingItem && editingItem.id) {
-      // Update existing
-      const updated = items.map(item =>
-        item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item
-      );
-      updateFunction(updated);
-    } else {
-      // Add new
-      const updated = [...items, { ...newItem, id: Date.now().toString() }];
-      updateFunction(updated);
+  const handleSave = async (items: any[], updateFunction: Function, newItem: any, itemType: 'agents' | 'properties') => {
+    try {
+      if (editingItem && editingItem.id) {
+        // Update existing - Supabase'da güncelle
+        const realId = editingItem.id.replace('-supabase', '');
+        
+        if (itemType === 'agents') {
+          const { error } = await dbHelpers.updateAgent(realId, {
+            name: newItem.name,
+            title: newItem.title,
+            image: newItem.image,
+            phone: newItem.phone,
+            email: newItem.email,
+            experience: newItem.experience,
+            specialties: newItem.specialties || [],
+            portfolio_url: newItem.portfolioUrl || '',
+            is_featured: newItem.isFeatured || false,
+            is_active: newItem.isActive
+          });
+          
+          if (error) {
+            alert('Agent güncellenirken hata oluştu: ' + error.message);
+            return;
+          }
+          showSuccessMessage('✅ Danışman başarıyla güncellendi!');
+        } else if (itemType === 'properties') {
+          const { error } = await dbHelpers.updateProperty(realId, {
+            title: newItem.title,
+            location: newItem.location,
+            size: newItem.size?.toString() || '',
+            price: newItem.price,
+            image: newItem.image,
+            description: newItem.description,
+            property_type: 'Arsa',
+            is_featured: newItem.isFeatured || false,
+            is_active: newItem.isActive
+          });
+          
+          if (error) {
+            alert('Property güncellenirken hata oluştu: ' + error.message);
+            return;
+          }
+          showSuccessMessage('✅ Arsa/Mülk başarıyla güncellendi!');
+        }
+        
+        // Local state'i güncelle
+        const updated = items.map(item =>
+          item.id === editingItem.id ? { ...newItem, id: editingItem.id } : item
+        );
+        updateFunction(updated);
+        
+      } else {
+        // Add new - Doğrudan Supabase'a ekle
+        let supabaseData;
+        
+        if (itemType === 'agents') {
+          const { data, error } = await dbHelpers.addAgent({
+            name: newItem.name,
+            title: newItem.title,
+            image: newItem.image,
+            phone: newItem.phone,
+            email: newItem.email,
+            experience: newItem.experience,
+            specialties: newItem.specialties || [],
+            portfolio_url: newItem.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/',
+            is_featured: newItem.isFeatured || false,
+            is_active: newItem.isActive
+          });
+          
+          if (error) {
+            alert('Agent eklenirken hata oluştu: ' + error.message);
+            return;
+          }
+          showSuccessMessage('✅ Yeni danışman başarıyla eklendi!');
+          supabaseData = data;
+        } else if (itemType === 'properties') {
+          const { data, error } = await dbHelpers.addProperty({
+            title: newItem.title,
+            location: newItem.location,
+            size: newItem.size?.toString() || '',
+            price: newItem.price,
+            image: newItem.image,
+            description: newItem.description,
+            property_type: 'Arsa',
+            is_featured: newItem.isFeatured || false,
+            is_active: newItem.isActive
+          });
+          
+          if (error) {
+            alert('Property eklenirken hata oluştu: ' + error.message);
+            return;
+          }
+          showSuccessMessage('✅ Yeni arsa/mülk başarıyla eklendi!');
+          supabaseData = data;
+        }
+        
+        console.log('✅ Yeni veri Supabase\'a eklendi:', supabaseData);
+        
+        // Local state'e ekleme - sadece otomatik refresh bekle, manuel ekleme yapma
+        // updateFunction fonksiyonunu çağırmıyoruz, auto-refresh sistemi halledecek
+      }
+      
+      setEditingItem(null);
+      setShowForm(false);
+      
+      // Başarı mesajı
+      alert(editingItem?.id ? 'Güncelleme başarılı!' : 'Ekleme başarılı!');
+      
+    } catch (error) {
+      console.error('handleSave hatası:', error);
+      alert('İşlem sırasında hata oluştu: ' + (error as Error).message);
     }
-    setEditingItem(null);
-    setShowForm(false);
   };
 
   const renderDashboard = () => (
@@ -197,7 +429,7 @@ const AdminPanel: React.FC = () => {
       {showForm && (
         <AgentForm
           agent={editingItem}
-          onSave={(agent) => handleSave(agents, updateAgents, agent)}
+          onSave={(agent) => handleSave(agents, updateAgents, agent, 'agents')}
           onCancel={() => { setShowForm(false); setEditingItem(null); }}
         />
       )}
@@ -261,15 +493,127 @@ const AdminPanel: React.FC = () => {
       {showForm && (
         <PropertyForm
           property={editingItem}
-          onSave={(property) => handleSave(properties, updateProperties, property)}
+          onSave={(property) => handleSave(properties, updateProperties, property, 'properties')}
           onCancel={() => { setShowForm(false); setEditingItem(null); }}
         />
       )}
     </div>
   );
 
+  const renderSlider = () => (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Ana Sayfa Slider</h2>
+        <button
+          onClick={() => { setShowForm(true); setEditingItem(null); }}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Yeni Slide Ekle</span>
+        </button>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {sliderItems.map((slide) => (
+          <div key={slide.id} className="bg-gray-50 rounded-lg p-4 relative group">
+            <img 
+              src={slide.image} 
+              alt={slide.title}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = '/api/placeholder/400/300';
+              }}
+            />
+            
+            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => { setEditingItem(slide); setShowForm(true); }}
+                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleToggleActive(sliderItems, updateSliderItems, slide.id)}
+                className={`p-2 rounded-full ${slide.isActive ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
+              >
+                {slide.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            </div>
+
+            <h3 className="font-semibold text-lg mb-2 line-clamp-2">{slide.title}</h3>
+            <p className="text-gray-600 mb-2 line-clamp-1">{slide.subtitle}</p>
+            <p className="text-sm text-gray-500 flex items-center">
+              <MapPin className="w-4 h-4 mr-1" />
+              {slide.location}
+            </p>
+            
+            <div className="mt-3 flex items-center justify-between">
+              <span className={`px-2 py-1 rounded-full text-xs ${slide.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                {slide.isActive ? 'Aktif' : 'Pasif'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-gray-500 text-center mt-8">
+        💡 Slider yönetimi henüz geliştiriliyor. Yakında kullanıma açılacak!
+      </p>
+    </div>
+  );
+
   return (
     <div className="pt-24 pb-16 min-h-screen bg-gray-100">
+      <style>{`
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
+      
+      {/* Başarı Mesajı */}
+      {successMessage && (
+        <div className="fixed top-20 right-4 z-50 animate-slide-in-right">
+          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium">{successMessage}</p>
+            </div>
+            <button 
+              onClick={() => setSuccessMessage(null)}
+              className="flex-shrink-0 text-green-200 hover:text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slide-in-right {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in-right {
+          animation: slide-in-right 0.3s ease-out;
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-blue-900">Admin Panel</h1>
@@ -316,60 +660,142 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'agents' && renderAgents()}
             {activeTab === 'properties' && renderProperties()}
-            {activeTab === 'slider' && <div>Slider yönetimi yakında...</div>}
+            {activeTab === 'slider' && renderSlider()}
             {activeTab === 'testimonials' && (
               <div>
-                <h2 className="text-2xl font-bold mb-6">Müşteri Yorumları</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold">Müşteri Yorumları</h2>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const { data: testimonialsData, error } = await dbHelpers.getTestimonials();
+                        console.log('🔍 Manuel testimonials yenileme:', { data: testimonialsData, error });
+                        if (!error && testimonialsData) {
+                          const mappedTestimonials = testimonialsData.map((testimonial: any) => ({
+                            id: testimonial.id + '-supabase',
+                            name: testimonial.name,
+                            initials: testimonial.initials,
+                            comment: testimonial.comment,
+                            rating: testimonial.rating,
+                            isActive: testimonial.is_active
+                          }));
+                          updateTestimonials(mappedTestimonials);
+                          alert(`${mappedTestimonials.length} yorum yüklendi`);
+                        } else {
+                          alert('Supabase\'dan veri çekilemedi: ' + (error?.message || 'Bilinmeyen hata'));
+                        }
+                      } catch (error) {
+                        console.error('Manuel yenileme hatası:', error);
+                        alert('Hata: ' + (error as Error).message);
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Yenile
+                  </button>
+                </div>
+                <div className="mb-4 p-3 bg-gray-100 rounded">
+                  <strong>Debug:</strong> Toplam {testimonials.length} yorum - 
+                  Supabase: {testimonials.filter(t => t.id.includes('-supabase')).length}, 
+                  Local: {testimonials.filter(t => !t.id.includes('-supabase')).length}
+                </div>
                 {testimonials.length === 0 ? (
                   <p className="text-gray-500">Henüz müşteri yorumu yok.</p>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto shadow-lg rounded-lg">
                     <table className="min-w-full bg-white border rounded-lg">
-                      <thead>
+                      <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-2 border-b">Ad Soyad</th>
-                          <th className="px-4 py-2 border-b">Yorum</th>
-                          <th className="px-4 py-2 border-b">Puan</th>
-                          <th className="px-4 py-2 border-b">Durum</th>
-                          <th className="px-4 py-2 border-b">İşlem</th>
+                          <th className="px-3 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Ad Soyad</th>
+                          <th className="px-3 py-3 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5">Yorum İçeriği</th>
+                          <th className="px-3 py-3 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Puan</th>
+                          <th className="px-3 py-3 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">Durum</th>
+                          <th className="px-3 py-3 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">İşlemler</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="bg-white divide-y divide-gray-200">
                         {testimonials.slice().reverse().map((t) => (
-                          <tr key={t.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border-b">{t.name}</td>
-                            <td className="px-4 py-2 border-b max-w-xs whitespace-pre-line">{t.comment}</td>
-                            <td className="px-4 py-2 border-b">
-                              {t.rating ? (
-                                <span className="flex items-center gap-1">
-                                  {[1,2,3,4,5].map(i => (
-                                    <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill={i <= (t.rating || 0) ? '#fbbf24' : 'none'} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                  ))}
-                                </span>
-                              ) : '-'}
+                          <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-3 py-4 border-b">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-8 w-8">
+                                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <span className="text-xs font-medium text-white">{t.initials}</span>
+                                  </div>
+                                </div>
+                                <div className="ml-3">
+                                  <div className="text-sm font-medium text-gray-900 break-words">{t.name || 'İsimsiz'}</div>
+                                </div>
+                              </div>
                             </td>
-                            <td className="px-4 py-2 border-b">
-                              {t.isActive ? (
-                                <span className="text-green-600 font-semibold">Yayında</span>
+                            <td className="px-3 py-4 border-b">
+                              <div className="text-sm text-gray-900 max-w-md">
+                                <div className="line-clamp-3 break-words">{t.comment}</div>
+                              </div>
+                            </td>
+                            <td className="px-3 py-4 border-b text-center">
+                              {t.rating ? (
+                                <div className="flex items-center justify-center">
+                                  <span className="flex items-center gap-1">
+                                    {[1,2,3,4,5].map(i => (
+                                      <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill={i <= (t.rating || 0) ? '#fbbf24' : 'none'} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    ))}
+                                  </span>
+                                  <span className="ml-2 text-sm text-gray-600">({t.rating}/5)</span>
+                                </div>
                               ) : (
-                                <span className="text-yellow-600 font-semibold">Onay Bekliyor</span>
+                                <span className="text-gray-400">-</span>
                               )}
                             </td>
-                            <td className="px-4 py-2 border-b">
-                              <div className="flex space-x-2">
+                            <td className="px-3 py-4 border-b text-center">
+                              {t.isActive ? (
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                  Yayında
+                                </span>
+                              ) : (
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                  Onay Bekliyor
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-4 border-b text-center">
+                              <div className="flex items-center justify-center space-x-2">
                                 <button
-                                  className={`px-3 py-1 rounded font-bold text-xs ${t.isActive ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                                  onClick={() => {
-                                    const updated = testimonials.map(item => item.id === t.id ? { ...item, isActive: !item.isActive } : item);
-                                    updateTestimonials(updated);
+                                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                                    t.isActive 
+                                      ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  }`}
+                                  onClick={async () => {
+                                    try {
+                                      // Supabase'da güncelle
+                                      const realId = t.id.replace('-supabase', '');
+                                      const { error } = await dbHelpers.updateTestimonial(realId, { is_active: !t.isActive });
+                                      
+                                      if (error) {
+                                        console.error('Supabase yorum güncelleme hatası:', error);
+                                        alert('Yorum durumu güncellenirken bir hata oluştu.');
+                                        return;
+                                      }
+                                      
+                                      console.log('✅ Yorum durumu başarıyla Supabase\'da güncellendi');
+                                      
+                                      // Local state'i güncelle
+                                      const updated = testimonials.map(item => item.id === t.id ? { ...item, isActive: !item.isActive } : item);
+                                      updateTestimonials(updated);
+                                    } catch (error) {
+                                      console.error('Beklenmeyen hata:', error);
+                                      alert('Yorum durumu güncellenirken bir hata oluştu.');
+                                    }
                                   }}
+                                  title={t.isActive ? 'Yayından Kaldır' : 'Yayınla'}
                                 >
-                                  {t.isActive ? 'Yayından Kaldır' : 'Yayınla'}
+                                  {t.isActive ? 'Kaldır' : 'Yayınla'}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteTestimonial(t.id)}
-                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                  title="Sil"
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                  title="Yorumu Sil"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -441,7 +867,7 @@ const AgentForm: React.FC<{
     specialties: agent.specialties?.join(', ') || '',
     isActive: agent.isActive ?? true,
     isFeatured: agent.isFeatured ?? false,
-    portfolioUrl: agent.portfolioUrl || '',
+    portfolioUrl: agent.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/',
   });
 
   const handleSubmit = (e: React.FormEvent) => {

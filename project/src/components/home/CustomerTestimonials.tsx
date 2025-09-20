@@ -19,9 +19,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Star } from 'lucide-react';
 import { Quote } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { dbHelpers } from '../../utils/supabaseClient-new';
 
 const CustomerTestimonials: React.FC = () => {
-  const { testimonials, updateTestimonials } = useData();
+  const { testimonials } = useData();
   // Baloncuk görünürlüğü ve animasyon için state
   const [showBubble, setShowBubble] = useState(false);
   const bubbleTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -71,27 +72,53 @@ const CustomerTestimonials: React.FC = () => {
     setActiveTestimonialId(activeTestimonialId === id ? null : id);
   };
 
-  const handleAddTestimonial = (e: React.FormEvent) => {
+  const handleAddTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newComment.trim() || rating === 0) return;
+    
     const initials = newName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
     const newTestimonial = {
-      id: Date.now().toString(),
       name: newName,
       initials,
       comment: newComment,
       rating,
-      isActive: false // admin onayı bekliyor
+      is_active: false // admin onayı bekliyor
     };
-    updateTestimonials([...testimonials, newTestimonial]);
-    setNewName("");
-    setNewComment("");
-    setRating(0);
-    setSubmitSuccess(true);
-    setTimeout(() => {
-      setShowModal(false);
-      setSubmitSuccess(false);
-    }, 1500);
+    
+    try {
+      // Debug: Supabase bağlantısını kontrol et
+      console.log('🔍 Yorum ekleme işlemi başladı...', { newName, newComment, rating });
+      console.log('🔧 Supabase Config:', {
+        url: import.meta.env.VITE_SUPABASE_URL,
+        keyLength: import.meta.env.VITE_SUPABASE_ANON_KEY?.length || 0
+      });
+      
+      // Supabase'a veri ekle
+      const { data, error } = await dbHelpers.addTestimonial(newTestimonial);
+      
+      if (error) {
+        console.error('❌ Supabase yorum ekleme hatası:', error);
+        alert('Yorum eklenirken bir hata oluştu: ' + error.message + '\n\nLütfen .env dosyasındaki Supabase bilgilerini kontrol edin.');
+        return;
+      }
+      
+      console.log('✅ Yorum başarıyla Supabase\'a eklendi:', data);
+      
+      // Sadece Supabase'a eklendi, local state'i güncelleme
+      // Admin panel auto-refresh sistemi otomatik olarak çekecek
+      
+      setNewName("");
+      setNewComment("");
+      setRating(0);
+      setSubmitSuccess(true);
+      setTimeout(() => {
+        setShowModal(false);
+        setSubmitSuccess(false);
+      }, 1500);
+    } catch (error) {
+      console.error('Beklenmeyen hata:', error);
+      alert('Yorum eklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+    }
   };
 
   const [floatingPositions, setFloatingPositions] = useState<Array<{ x: number; y: number; delay: number }>>([]);
@@ -186,40 +213,104 @@ const CustomerTestimonials: React.FC = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-md relative animate-fade-in">
-            <button className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl" onClick={() => setShowModal(false)}>&times;</button>
-            <h3 className="text-2xl font-bold text-blue-900 mb-4">Yorumunuzu Bırakın</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative animate-fade-in transform transition-all duration-300 scale-100">
+            <button 
+              className="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-3xl font-light transition-colors duration-200 hover:rotate-90 transform" 
+              onClick={() => setShowModal(false)}
+            >
+              ×
+            </button>
+            
             {submitSuccess ? (
-              <div className="text-green-600 font-semibold text-center py-4">Yorumunuz iletildi, admin onayı sonrası yayınlanacaktır.</div>
-            ) : (
-              <form onSubmit={handleAddTestimonial} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Puanınız *</label>
-                  <div className="flex items-center gap-1">
-                    {[1,2,3,4,5].map((star) => (
-                      <button
-                        type="button"
-                        key={star}
-                        onClick={() => setRating(star)}
-                        className="focus:outline-none"
-                        aria-label={`Yıldız ${star}`}
-                      >
-                        <Star className={`w-7 h-7 ${star <= rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} fill={star <= rating ? '#fbbf24' : 'none'} />
-                      </button>
-                    ))}
+              <div className="p-8 text-center">
+                <div className="mb-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
                   </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">Teşekkürler! 🎉</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Yorumunuz başarıyla iletildi.<br/>
+                    Admin onayından sonra sitede yayınlanacaktır.
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Adınız Soyadınız *</label>
-                  <input type="text" value={newName} onChange={e => setNewName(e.target.value)} required className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-100 focus:border-amber-500 text-lg" placeholder="Adınızı girin" />
+                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                  <p className="text-blue-800 text-sm font-medium">
+                    💡 Yorumunuz incelendikten sonra anasayfada görünecektir
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Yorumunuz *</label>
-                  <textarea value={newComment} onChange={e => setNewComment(e.target.value)} required rows={4} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-100 focus:border-amber-500 text-lg resize-none" placeholder="Yorumunuzu yazın" />
+              </div>
+            ) : (
+              <div className="p-8">
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">Yorumunuzu Bırakın</h3>
+                  <p className="text-gray-500">Deneyiminizi bizimle paylaşın</p>
                 </div>
-                <button type="submit" className="w-full bg-amber-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-amber-600 transition-all duration-300">Gönder</button>
-              </form>
+                
+                <form onSubmit={handleAddTestimonial} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">Puanınız *</label>
+                    <div className="flex items-center justify-center gap-2">
+                      {[1,2,3,4,5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setRating(star)}
+                          className="focus:outline-none transform hover:scale-110 transition-transform duration-200"
+                          aria-label={`Yıldız ${star}`}
+                        >
+                          <Star className={`w-8 h-8 ${star <= rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} transition-colors duration-200`} fill={star <= rating ? '#fbbf24' : 'none'} />
+                        </button>
+                      ))}
+                    </div>
+                    {rating > 0 && (
+                      <p className="text-center text-sm text-gray-500 mt-2">
+                        {rating === 5 ? "Mükemmel! 🌟" : rating === 4 ? "Çok iyi! 👍" : rating === 3 ? "İyi 👌" : rating === 2 ? "Fena değil" : "Geliştirebiliriz"}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">Adınız Soyadınız *</label>
+                    <input 
+                      type="text" 
+                      value={newName} 
+                      onChange={e => setNewName(e.target.value)} 
+                      required 
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-lg transition-all duration-200" 
+                      placeholder="Adınızı girin" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">Yorumunuz *</label>
+                    <textarea 
+                      value={newComment} 
+                      onChange={e => setNewComment(e.target.value)} 
+                      required 
+                      rows={4} 
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-lg resize-none transition-all duration-200" 
+                      placeholder="Deneyiminizi bizimle paylaşın..." 
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                      </svg>
+                      Gönder
+                    </span>
+                  </button>
+                </form>
+              </div>
             )}
           </div>
         </div>
@@ -306,9 +397,9 @@ const CustomerTestimonials: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> {/* max-w-7xl div kapanışı */}
 
-  <style>{`
+      <style>{`
         @keyframes float {
           0%, 100% {
             transform: translate(-50%, -50%) translateY(0px) rotate(0deg);
@@ -323,6 +414,21 @@ const CustomerTestimonials: React.FC = () => {
         
         .animate-float {
           animation: float 12s ease-in-out infinite;
+        }
+        
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
         }
       `}</style>
     </section>
