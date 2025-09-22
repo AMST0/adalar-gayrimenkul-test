@@ -15,7 +15,9 @@ import {
   X,
   MapPin,
   Phone,
-  Star
+  Star,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -51,11 +53,16 @@ const AdminPanel: React.FC = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  // Başarı mesajını göster ve 3 saniye sonra gizle
+  // Başarı mesajını göster ve konfeti efekti ile birlikte 3 saniye sonra gizle
   const showSuccessMessage = (message: string) => {
     setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
+    setShowConfetti(true);
+    setTimeout(() => {
+      setSuccessMessage(null);
+      setShowConfetti(false);
+    }, 3000);
   };
 
   // İletişim taleplerini otomatik güncelle
@@ -338,6 +345,25 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  // Danışman sıralamasını değiştirme fonksiyonları
+  const moveAgentUp = (index: number) => {
+    if (index > 0) {
+      const newAgents = [...agents];
+      [newAgents[index], newAgents[index - 1]] = [newAgents[index - 1], newAgents[index]];
+      updateAgents(newAgents);
+      showSuccessMessage(`✅ ${newAgents[index - 1].name} yukarı taşındı!`);
+    }
+  };
+
+  const moveAgentDown = (index: number) => {
+    if (index < agents.length - 1) {
+      const newAgents = [...agents];
+      [newAgents[index], newAgents[index + 1]] = [newAgents[index + 1], newAgents[index]];
+      updateAgents(newAgents);
+      showSuccessMessage(`✅ ${newAgents[index + 1].name} aşağı taşındı!`);
+    }
+  };
+
   const renderDashboard = () => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
       <div className="bg-gray-900 text-white p-4 md:p-6 rounded-lg">
@@ -390,11 +416,36 @@ const AdminPanel: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {agents.map((agent) => (
+        {agents.map((agent, index) => (
           <div key={agent.id} className="bg-white p-4 md:p-6 rounded-lg shadow-md border">
             <div className="flex items-start justify-between mb-4">
               <img src={agent.image} alt={agent.name} className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
               <div className="flex space-x-1 md:space-x-2">
+                {/* Sıralama Butonları */}
+                <button
+                  onClick={() => moveAgentUp(index)}
+                  disabled={index === 0}
+                  className={`p-1.5 md:p-2 rounded transition-colors ${
+                    index === 0 
+                      ? 'text-gray-300 cursor-not-allowed' 
+                      : 'text-blue-600 hover:bg-blue-50'
+                  }`}
+                  title="Yukarı Taşı"
+                >
+                  <ChevronUp className="w-3 h-3 md:w-4 md:h-4" />
+                </button>
+                <button
+                  onClick={() => moveAgentDown(index)}
+                  disabled={index === agents.length - 1}
+                  className={`p-1.5 md:p-2 rounded transition-colors ${
+                    index === agents.length - 1 
+                      ? 'text-gray-300 cursor-not-allowed' 
+                      : 'text-blue-600 hover:bg-blue-50'
+                  }`}
+                  title="Aşağı Taşı"
+                >
+                  <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
+                </button>
                 <button
                   onClick={() => handleToggleActive(agents, updateAgents, agent.id)}
                   className={`p-1.5 md:p-2 rounded ${agent.isActive ? 'text-green-600' : 'text-gray-400'}`}
@@ -639,10 +690,10 @@ const AdminPanel: React.FC = () => {
               <input
                 type="url"
                 name="image"
-                defaultValue={editingItem?.image || ''}
+                defaultValue={editingItem?.image || 'https://i.hizliresim.com/rs5qoel.png'}
                 required
                 className="w-full p-2 border rounded"
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://i.hizliresim.com/rs5qoel.png"
               />
             </div>
             
@@ -701,7 +752,10 @@ const AdminPanel: React.FC = () => {
               <p className="font-medium">{successMessage}</p>
             </div>
             <button 
-              onClick={() => setSuccessMessage(null)}
+              onClick={() => {
+                setSuccessMessage(null);
+                setShowConfetti(false);
+              }}
               className="flex-shrink-0 text-green-200 hover:text-white transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -709,6 +763,23 @@ const AdminPanel: React.FC = () => {
               </svg>
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Konfeti Animasyonu */}
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-40">
+          {Array.from({ length: 50 }).map((_, i) => (
+            <div
+              key={i}
+              className="confetti"
+              style={{
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
         </div>
       )}
 
@@ -726,6 +797,61 @@ const AdminPanel: React.FC = () => {
         
         .animate-slide-in-right {
           animation: slide-in-right 0.3s ease-out;
+        }
+
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(-100vh) rotateZ(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotateZ(360deg);
+            opacity: 0;
+          }
+        }
+
+        .confetti {
+          position: fixed;
+          width: 10px;
+          height: 10px;
+          background: #FFD700;
+          animation: confetti-fall 3s linear;
+          z-index: 9999;
+        }
+
+        .confetti:nth-child(odd) {
+          background: #FF6B6B;
+          width: 8px;
+          height: 8px;
+          animation-delay: -0.5s;
+        }
+
+        .confetti:nth-child(even) {
+          background: #4ECDC4;
+          width: 6px;
+          height: 6px;
+          animation-delay: -1s;
+        }
+
+        .confetti:nth-child(3n) {
+          background: #45B7D1;
+          width: 12px;
+          height: 12px;
+          animation-delay: -1.5s;
+        }
+
+        .confetti:nth-child(4n) {
+          background: #96CEB4;
+          width: 7px;
+          height: 7px;
+          animation-delay: -2s;
+        }
+
+        .confetti:nth-child(5n) {
+          background: #FFEAA7;
+          width: 9px;
+          height: 9px;
+          animation-delay: -2.5s;
         }
       `}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
