@@ -17,13 +17,23 @@ import {
   Phone,
   Star,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Upload,
+  Camera,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAdmin } from '../../contexts/AdminContext';
 import { Agent, Property } from '../../types';
 import Button from '../common/Button';
+import Toast from '../common/Toast';
 import { dbHelpers } from '../../utils/supabaseClient-new';
+import { storageHelpers } from '../../utils/supabaseStorage';
 
 
 import { useEffect } from 'react';
@@ -267,7 +277,21 @@ const AdminPanel: React.FC = () => {
             description: newItem.description,
             property_type: 'Arsa',
             is_featured: newItem.isFeatured || false,
-            is_active: newItem.isActive
+            is_active: newItem.isActive,
+            // Eksik alanları ekle - database şemasına uygun
+            ada: newItem.ada ? parseInt(newItem.ada) : null,
+            parsel: newItem.parsel ? parseInt(newItem.parsel) : null,
+            pafta: newItem.pafta ? parseInt(newItem.pafta) : null,
+            tapu_alani: newItem.tapuAlani ? parseInt(newItem.tapuAlani) : null,
+            nitelik: newItem.nitelik || null,
+            mevkii: newItem.mevkii || null,
+            zemin_tipi: newItem.zeminTipi || null,
+            agent_id: newItem.danismanId ? newItem.danismanId.replace('-supabase', '') : null,
+            il: newItem.il || null,
+            ilce: newItem.ilce || null,
+            mahalle_koy: newItem.mahalle || null,
+            mahalle_no: newItem.mahalleNo || null,
+            image_urls: newItem.images || []
           });
           
           if (error) {
@@ -317,7 +341,21 @@ const AdminPanel: React.FC = () => {
             description: newItem.description,
             property_type: 'Arsa',
             is_featured: newItem.isFeatured || false,
-            is_active: newItem.isActive
+            is_active: newItem.isActive,
+            // Eksik alanları ekle - database şemasına uygun
+            ada: newItem.ada ? parseInt(newItem.ada) : null,
+            parsel: newItem.parsel ? parseInt(newItem.parsel) : null,
+            pafta: newItem.pafta ? parseInt(newItem.pafta) : null,
+            tapu_alani: newItem.tapuAlani ? parseInt(newItem.tapuAlani) : null,
+            nitelik: newItem.nitelik || null,
+            mevkii: newItem.mevkii || null,
+            zemin_tipi: newItem.zeminTipi || null,
+            agent_id: newItem.danismanId ? newItem.danismanId.replace('-supabase', '') : null,
+            il: newItem.il || null,
+            ilce: newItem.ilce || null,
+            mahalle_koy: newItem.mahalle || null,
+            mahalle_no: newItem.mahalleNo || null,
+            image_urls: newItem.images || []
           });
           
           if (error) {
@@ -1244,6 +1282,14 @@ const PropertyForm: React.FC<{
   const [availableDistricts, setAvailableDistricts] = useState<{code: string, name: string}[]>([]);
   const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [toastMessage, setToastMessage] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+    show: boolean;
+  }>({ type: 'success', message: '', show: false });
   const [formData, setFormData] = useState({
     title: property.title || '',
     location: property.location || '',
@@ -1272,8 +1318,12 @@ const PropertyForm: React.FC<{
   // İl değiştiğinde ilçeleri güncelle
   useEffect(() => {
     if (formData.il) {
-      const districts = getDistrictsByProvince(formData.il);
-      setAvailableDistricts(districts);
+      // İl adından code'u bul
+      const provinceCode = getAllProvinces().find(p => p.name === formData.il)?.code;
+      if (provinceCode) {
+        const districts = getDistrictsByProvince(provinceCode);
+        setAvailableDistricts(districts);
+      }
       // İl değiştiğinde ilçe ve mahalle temizle
       if (formData.ilce) {
         setFormData(prev => ({ ...prev, ilce: '', mahalle: '' }));
@@ -1287,8 +1337,12 @@ const PropertyForm: React.FC<{
   // İlçe değiştiğinde mahalleleri güncelle
   useEffect(() => {
     if (formData.ilce) {
-      const neighborhoods = getNeighborhoodsByDistrict(formData.ilce);
-      setAvailableNeighborhoods(neighborhoods);
+      // İlçe adından code'u bul
+      const districtCode = availableDistricts.find(d => d.name === formData.ilce)?.code;
+      if (districtCode) {
+        const neighborhoods = getNeighborhoodsByDistrict(districtCode);
+        setAvailableNeighborhoods(neighborhoods);
+      }
       // İlçe değiştiğinde mahalle temizle
       if (formData.mahalle) {
         setFormData(prev => ({ ...prev, mahalle: '' }));
@@ -1296,14 +1350,125 @@ const PropertyForm: React.FC<{
     } else {
       setAvailableNeighborhoods([]);
     }
-  }, [formData.ilce]);
+  }, [formData.ilce, availableDistricts]);
 
-  const handleFileUpload = (files: FileList | null) => {
-    if (files) {
-      const fileArray = Array.from(files);
-      setSelectedFiles(fileArray);
-      // Burada dosyaları upload edecek fonksiyon eklenebilir
+  // Toast gösterme fonksiyonu
+  const showToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setToastMessage({ type, message, show: true });
+    setTimeout(() => {
+      setToastMessage(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  // Dosya yükleme fonksiyonu
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+    const uploadedUrls: string[] = [];
+    const totalFiles = files.length;
+
+    try {
+      showToast('info', `${totalFiles} resim yükleniyor...`);
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+        
+        // Storage helper kullanarak yükle
+        const result = await storageHelpers.uploadImage(file, 'property-images');
+        
+        if (!result.success) {
+          console.error('Dosya yükleme hatası:', result.error);
+          showToast('error', `${file.name} yüklenemedi: ${result.error}`);
+          continue;
+        }
+
+        if (result.url) {
+          uploadedUrls.push(result.url);
+        }
+      }
+
+      // Yüklenen resimleri form datasına ekle
+      setUploadedImages(prev => [...prev, ...uploadedUrls]);
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls],
+        // İlk resmi ana resim olarak ayarla
+        image: prev.image === 'https://i.hizliresim.com/rs5qoel.png' && uploadedUrls.length > 0 
+          ? uploadedUrls[0] 
+          : prev.image
+      }));
+
+      if (uploadedUrls.length > 0) {
+        showToast('success', `🎉 ${uploadedUrls.length} resim başarıyla yüklendi!`);
+      } else {
+        showToast('error', 'Hiçbir resim yüklenemedi');
+      }
+    } catch (error) {
+      console.error('Yükleme hatası:', error);
+      showToast('error', 'Resim yükleme sırasında beklenmeyen bir hata oluştu');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+      setSelectedFiles([]);
     }
+  };
+
+  // Resim silme fonksiyonu
+  const removeImage = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
+    showToast('info', '🗑️ Resim kaldırıldı');
+  };
+
+  // Resim sıralama fonksiyonları
+  const moveImageUp = (index: number) => {
+    if (index === 0) return;
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+      return {
+        ...prev,
+        images: newImages,
+        // İlk resim değiştiyse ana resmi güncelle
+        image: newImages[0] !== prev.images[0] ? newImages[0] : prev.image
+      };
+    });
+  };
+
+  const moveImageDown = (index: number) => {
+    setFormData(prev => {
+      if (index === prev.images.length - 1) return prev;
+      const newImages = [...prev.images];
+      [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+      return {
+        ...prev,
+        images: newImages,
+        // İlk resim değiştiyse ana resmi güncelle
+        image: newImages[0] !== prev.images[0] ? newImages[0] : prev.image
+      };
+    });
+  };
+
+  // Ana resim olarak ayarlama
+  const setAsMainImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      const selectedImage = newImages[index];
+      // Seçilen resmi başa al
+      newImages.splice(index, 1);
+      newImages.unshift(selectedImage);
+      return {
+        ...prev,
+        images: newImages,
+        image: selectedImage
+      };
+    });
+    showToast('success', '🌟 Ana resim güncellendi');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1372,8 +1537,11 @@ const PropertyForm: React.FC<{
             <div className="grid grid-cols-2 gap-3">
               {/* İl Seçimi */}
               <select
-                value={formData.il}
-                onChange={(e) => setFormData({ ...formData, il: e.target.value })}
+                value={getAllProvinces().find(p => p.name === formData.il)?.code || ''}
+                onChange={(e) => {
+                  const selectedProvince = getAllProvinces().find(p => p.code === e.target.value);
+                  setFormData({ ...formData, il: selectedProvince ? selectedProvince.name : '' });
+                }}
                 className="w-full p-3 border border-gray-300 rounded-lg"
                 required
               >
@@ -1387,8 +1555,11 @@ const PropertyForm: React.FC<{
               
               {/* İlçe Seçimi */}
               <select
-                value={formData.ilce}
-                onChange={(e) => setFormData({ ...formData, ilce: e.target.value })}
+                value={availableDistricts.find(d => d.name === formData.ilce)?.code || ''}
+                onChange={(e) => {
+                  const selectedDistrict = availableDistricts.find(d => d.code === e.target.value);
+                  setFormData({ ...formData, ilce: selectedDistrict ? selectedDistrict.name : '' });
+                }}
                 className="w-full p-3 border border-gray-300 rounded-lg"
                 disabled={!formData.il}
                 required
@@ -1553,49 +1724,323 @@ const PropertyForm: React.FC<{
             })()}
           </div>
 
-          {/* Görseller */}
-          <div className="border-b pb-4">
-            <h4 className="font-semibold mb-3 text-gray-700">Görseller</h4>
-            <input
-              type="url"
-              placeholder="Ana Fotoğraf URL (İsteğe Bağlı - Boş bırakılırsa varsayılan görsel kullanılır)"
-              value={formData.image === 'https://i.hizliresim.com/rs5qoel.png' ? '' : formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value || 'https://i.hizliresim.com/rs5qoel.png' })}
-              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
-            />
-            <div className="bg-gray-50 p-3 rounded-lg mb-3">
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>Varsayılan Görsel:</strong> {formData.image}
-              </p>
-              <img 
-                src={formData.image} 
-                alt="Önizleme" 
-                className="w-32 h-20 object-cover rounded border"
-                onError={(e) => {
-                  e.currentTarget.src = 'https://i.hizliresim.com/rs5qoel.png';
-                }}
-              />
+          {/* Görseller Section */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Camera className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900">Görsel Yönetimi</h4>
+                <p className="text-sm text-gray-600">Arsa fotoğraflarını yükleyin ve düzenleyin</p>
+              </div>
             </div>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
-              onChange={(e) => handleFileUpload(e.target.files)}
-            />
-            {selectedFiles.length > 0 && (
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-sm text-green-700 mb-2">Seçilen dosyalar:</p>
-                <ul className="text-sm text-green-600">
-                  {selectedFiles.map((file, index) => (
-                    <li key={index}>• {file.name}</li>
+            
+            {/* Dosya Yükleme Alanı */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                📸 Resim Yükleme
+              </label>
+              
+              {/* Drag & Drop Alanı */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                  id="file-upload"
+                  disabled={uploading}
+                />
+                <label
+                  htmlFor="file-upload"
+                  className={`relative block w-full border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
+                    uploading 
+                      ? 'border-gray-300 bg-gray-50 cursor-not-allowed' 
+                      : 'border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-100 hover:to-indigo-100'
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    {uploading ? (
+                      <>
+                        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                        <p className="text-lg font-medium text-gray-600 mb-2">Yükleniyor...</p>
+                        <p className="text-sm text-gray-500">Lütfen bekleyin, resimleriniz işleniyor</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                          <Camera className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <p className="text-lg font-medium text-gray-900 mb-2">
+                          Resimleri buraya sürükleyin veya tıklayın
+                        </p>
+                        <p className="text-sm text-gray-600 mb-4">
+                          PNG, JPG, JPEG formatlarında birden fazla resim seçebilirsiniz
+                        </p>
+                        <div className="flex items-center justify-center space-x-2 text-blue-600 font-medium">
+                          <Upload className="w-5 h-5" />
+                          <span>Dosya Seç</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Yükleme progress bar'ı için alan */}
+                  {uploading && (
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '70%'}}></div>
+                      </div>
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              {/* Yükleme bilgileri */}
+              {selectedFiles.length > 0 && !uploading && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                    <span className="text-sm font-medium text-green-800">
+                      {selectedFiles.length} dosya seçildi
+                    </span>
+                  </div>
+                  <ul className="text-sm text-green-700 space-y-1">
+                    {selectedFiles.slice(0, 3).map((file, index) => (
+                      <li key={index} className="flex items-center space-x-2">
+                        <span className="text-green-500">📷</span>
+                        <span>{file.name}</span>
+                        <span className="text-green-600">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
+                      </li>
+                    ))}
+                    {selectedFiles.length > 3 && (
+                      <li className="text-green-600">...ve {selectedFiles.length - 3} dosya daha</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {/* Dosya yükleme limitleri */}
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <div className="text-amber-600 mt-0.5">⚠️</div>
+                  <div className="text-sm text-amber-800">
+                    <strong>Yükleme Kuralları:</strong>
+                    <ul className="mt-1 space-y-1 text-amber-700">
+                      <li>• Maksimum dosya boyutu: 10MB</li>
+                      <li>• Desteklenen formatlar: PNG, JPG, JPEG, GIF, WebP</li>
+                      <li>• Aynı anda birden fazla resim yükleyebilirsiniz</li>
+                      <li>• Yüksek kaliteli resimler tercih edin</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Yüklenen Resimler Galerisi */}
+            {formData.images.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Yüklenen Resimler ({formData.images.length})
+                  </label>
+                  <div className="text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded">
+                    💡 İlk resim ana resim olarak kullanılır
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formData.images.map((imageUrl, index) => (
+                    <div key={index} className="relative group bg-white border-2 border-gray-200 rounded-xl p-3 hover:border-blue-300 transition-all duration-200">
+                      {/* Resim */}
+                      <div className="relative">
+                        <img
+                          src={imageUrl}
+                          alt={`Resim ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://i.hizliresim.com/rs5qoel.png';
+                          }}
+                        />
+                        
+                        {/* Ana resim badge */}
+                        {index === 0 && (
+                          <div className="absolute top-2 left-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-2 py-1 rounded-full shadow-lg flex items-center">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            Ana Resim
+                          </div>
+                        )}
+                        
+                        {/* Sıra numarası */}
+                        <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-sm w-6 h-6 rounded-full flex items-center justify-center font-bold">
+                          {index + 1}
+                        </div>
+                      </div>
+
+                      {/* Kontrol butonları */}
+                      <div className="mt-3 flex items-center justify-between">
+                        {/* Sıralama butonları */}
+                        <div className="flex items-center space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => moveImageUp(index)}
+                            disabled={index === 0}
+                            className={`p-1.5 rounded transition-colors ${
+                              index === 0 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            }`}
+                            title="Yukarı taşı"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveImageDown(index)}
+                            disabled={index === formData.images.length - 1}
+                            className={`p-1.5 rounded transition-colors ${
+                              index === formData.images.length - 1 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            }`}
+                            title="Aşağı taşı"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Ana resim yap butonu */}
+                        {index !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setAsMainImage(index)}
+                            className="px-3 py-1.5 bg-yellow-100 text-yellow-700 text-xs rounded-lg hover:bg-yellow-200 transition-colors flex items-center"
+                            title="Ana resim yap"
+                          >
+                            <Star className="w-3 h-3 mr-1" />
+                            Ana Yap
+                          </button>
+                        )}
+
+                        {/* Silme butonu */}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="p-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                          title="Resmi sil"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Resim detayları */}
+                      <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded px-2 py-1">
+                        {index === 0 ? '🌟 Ana resim' : `📸 Galeri resmi ${index}`}
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
+                
+                {/* Resim sıralama ipucu */}
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start space-x-2">
+                    <div className="text-blue-600 mt-0.5">
+                      💡
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <strong>Resim Sıralama İpuçları:</strong>
+                      <ul className="mt-1 space-y-1 text-blue-700">
+                        <li>• İlk resim otomatik olarak ana resim olur</li>
+                        <li>• Yukarı/aşağı oklar ile sıralamayı değiştirebilirsiniz</li>
+                        <li>• "Ana Yap" butonu ile herhangi bir resmi ana resim yapabilirsiniz</li>
+                        <li>• Resimler kayıt edilirken bu sırayla kaydedilir</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
-            <p className="text-sm text-gray-500">
-              Birden fazla görsel seçebilirsiniz. Görseller yüklendikten sonra galeri oluşturulacak.
-            </p>
+
+            {/* URL ile Resim Ekleme (Alternatif) */}
+            <div className="mb-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500 font-medium">veya</span>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <span className="mr-2">🔗</span>
+                  URL ile Ana Resim Ekle (Opsiyonel)
+                </label>
+                <div className="flex space-x-3">
+                  <input
+                    type="url"
+                    placeholder="https://example.com/resim.jpg"
+                    value={formData.image === 'https://i.hizliresim.com/rs5qoel.png' ? '' : formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value || 'https://i.hizliresim.com/rs5qoel.png' })}
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.image && formData.image !== 'https://i.hizliresim.com/rs5qoel.png') {
+                        setFormData(prev => ({
+                          ...prev,
+                          images: [formData.image, ...prev.images.filter(img => img !== formData.image)]
+                        }));
+                      }
+                    }}
+                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                    disabled={!formData.image || formData.image === 'https://i.hizliresim.com/rs5qoel.png'}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Ekle
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Harici bir resim URL'si ekleyerek ana resim olarak kullanabilirsiniz
+                </p>
+              </div>
+            </div>
+
+            {/* Ana Resim Önizleme */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-gray-700 flex items-center">
+                  <Star className="w-4 h-4 mr-2 text-yellow-500 fill-current" />
+                  Ana Resim Önizleme
+                </label>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                  {formData.image === 'https://i.hizliresim.com/rs5qoel.png' ? 'Varsayılan' : 'Özel'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <img 
+                  src={formData.image} 
+                  alt="Ana resim önizleme" 
+                  className="w-20 h-20 object-cover rounded-lg border-2 border-white shadow-md"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://i.hizliresim.com/rs5qoel.png';
+                  }}
+                />
+                <div className="flex-1">
+                  <p className="text-sm text-gray-900 font-medium mb-1">
+                    Bu resim ilan kartlarında görünecek
+                  </p>
+                  <p className="text-xs text-gray-600 break-all">
+                    {formData.image}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <textarea
@@ -1638,6 +2083,16 @@ const PropertyForm: React.FC<{
             </Button>
           </div>
         </form>
+        
+        {/* Toast Notification */}
+        <Toast
+          type={toastMessage.type}
+          message={toastMessage.message}
+          show={toastMessage.show}
+          onClose={() => setToastMessage(prev => ({ ...prev, show: false }))}
+          progress={uploadProgress}
+          showProgress={uploading}
+        />
       </div>
     </div>
   );

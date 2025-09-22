@@ -110,7 +110,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             image: property.image,
             description: property.description,
             isActive: property.is_active,
-            isFeatured: property.is_featured
+            isFeatured: property.is_featured,
+            // Yeni alanları ekle
+            il: property.il,
+            ilce: property.ilce,
+            mahalle: property.mahalle_koy,
+            mahalleNo: property.mahalle_no,
+            ada: property.ada,
+            parsel: property.parsel,
+            tapuAlani: property.tapu_alani,
+            nitelik: property.nitelik,
+            mevkii: property.mevkii,
+            zeminTipi: property.zemin_tipi,
+            pafta: property.pafta,
+            danismanId: property.agent_id ? property.agent_id + '-supabase' : undefined,
+            images: property.image_urls || []
           }));
 
           const mappedProjects = (projectsResult.data || []).map((project: any) => ({

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Test</title>
+</head>
+<body>
+    <h1>Supabase Bağlantı Testi</h1>
+    <button onclick="testConnection()">Bağlantıyı Test Et</button>
+    <div id="result"></div>
+
+    <script type="module">
+        // Supabase client import
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js';
+        
+        const supabaseUrl = 'https://xasvtzbsdaeevxeivnyv.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhc3Z0emJzZGFlZXZ4ZWl2bnl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTQyOTcsImV4cCI6MjA3Mzg5MDI5N30.-V1FoSkwKsrr1KyBH_79jnWSCrUi1PnNAsPyAjGCPQM';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        window.testConnection = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Test ediliyor...';
+            
+            try {
+                // Test 1: Properties tablosunu sorgula
+                const { data, error } = await supabase
+                    .from('properties')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    resultDiv.innerHTML = `❌ Hata: ${error.message}`;
+                    console.error('Supabase error:', error);
+                } else {
+                    resultDiv.innerHTML = `✅ Başarılı! ${data.length} kayıt bulundu.<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    console.log('Supabase data:', data);
+                }
+                
+                // Test 2: Property ekleme
+                const testProperty = {
+                    title: 'Test Arsa',
+                    price: 500000,
+                    location: 'Test Lokasyon',
+                    size: '300',
+                    type: 'Arsa',
+                    description: 'Test açıklama',
+                    image: 'https://i.hizliresim.com/rs5qoel.png',
+                    is_featured: false,
+                    is_active: true,
+                    property_type: 'Arsa',
+                    ada: 123,
+                    parsel: 456,
+                    pafta: 789,
+                    tapu_alani: 300,
+                    nitelik: 'Test nitelik',
+                    mevkii: 'Test mevkii',
+                    zemin_tipi: 'Test zemin',
+                    agent_id: null,
+                    il: 'Test il',
+                    ilce: 'Test ilçe',
+                    mahalle_koy: 'Test mahalle',
+                    mahalle_no: '123',
+                    image_urls: []
+                };
+                
+                const { data: insertData, error: insertError } = await supabase
+                    .from('properties')
+                    .insert([testProperty])
+                    .select();
+                
+                if (insertError) {
+                    resultDiv.innerHTML += `<br>❌ Ekleme Hatası: ${insertError.message}`;
+                    console.error('Insert error:', insertError);
+                } else {
+                    resultDiv.innerHTML += `<br>✅ Test property başarıyla eklendi!<br><pre>${JSON.stringify(insertData, null, 2)}</pre>`;
+                    console.log('Insert successful:', insertData);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Exception: ${error.message}`;
+                console.error('Exception:', error);
+            }
+        };
+    </script>
+</body>
+</html>
