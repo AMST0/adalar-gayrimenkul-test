@@ -22,7 +22,7 @@ const FeaturedProperties: React.FC = () => {
       {/* Background Elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 right-20 w-32 h-32 bg-red-500 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-40 left-20 w-24 h-24 bg-blue-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-40 left-20 w-24 h-24 bg-gray-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -106,7 +106,7 @@ const FeaturedProperties: React.FC = () => {
                   </a>
                   <a
                     href="/iletisim"
-                    className="flex-1 border-2 border-blue-900 text-blue-900 py-3 px-4 rounded-xl font-bold hover:bg-blue-900 hover:text-white transition-all duration-300 text-center transform hover:scale-105"
+                    className="flex-1 border-2 border-gray-900 text-gray-900 py-3 px-4 rounded-xl font-bold hover:bg-gray-900 hover:text-white transition-all duration-300 text-center transform hover:scale-105"
                   >
                     İletişime Geç
                   </a>
@@ -119,7 +119,7 @@ const FeaturedProperties: React.FC = () => {
         <div className="text-center mt-16">
           <a
             href="/arsalar"
-            className="inline-flex items-center bg-gradient-to-r from-blue-900 to-blue-800 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:from-blue-800 hover:to-blue-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl group"
+            className="inline-flex items-center bg-gradient-to-r from-gray-900 to-gray-800 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl group"
           >
             <TrendingUp className="mr-3 w-6 h-6" />
             Tüm Arsaları Keşfet

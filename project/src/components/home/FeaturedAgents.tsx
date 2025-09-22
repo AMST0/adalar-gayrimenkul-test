@@ -12,7 +12,7 @@ const FeaturedAgents: React.FC = () => {
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Uzman Danışmanlarımız
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
@@ -45,7 +45,7 @@ const FeaturedAgents: React.FC = () => {
               </div>
               
               <div className="p-6">
-                <h3 className="text-xl font-bold text-blue-900 mb-1">{agent.name}</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">{agent.name}</h3>
                 <p className="text-gray-600 mb-3">{agent.title}</p>
                 <p className="text-sm text-amber-600 font-semibold mb-4">
                   {agent.experience} deneyim
@@ -55,7 +55,7 @@ const FeaturedAgents: React.FC = () => {
                   {agent.specialties.slice(0, 2).map((specialty, idx) => (
                     <span
                       key={idx}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                      className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium"
                     >
                       {specialty}
                     </span>
@@ -82,7 +82,7 @@ const FeaturedAgents: React.FC = () => {
                   </a>
                   <a
                     href={`/danismanlar/${agent.id}`}
-                    className="flex-1 border-2 border-blue-900 text-blue-900 py-2 px-4 rounded-lg font-semibold hover:bg-blue-900 hover:text-white transition-colors duration-300 text-center text-sm"
+                    className="flex-1 border-2 border-gray-900 text-gray-900 py-2 px-4 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition-colors duration-300 text-center text-sm"
                   >
                     Profil
                   </a>
@@ -95,7 +95,7 @@ const FeaturedAgents: React.FC = () => {
         <div className="text-center mt-12">
           <a
             href="/danismanlar"
-            className="bg-blue-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
+            className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
           >
             Tüm Danışmanları Gör
           </a>

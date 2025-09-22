@@ -17,7 +17,7 @@ const AboutSummary: React.FC = () => {
           <div className="space-y-6">
             <div className="space-y-4">
               <span className="text-amber-500 font-semibold text-lg">Biz Kimiz</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-blue-900 leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
                 Adalar'ın Güvenilir Gayrimenkul Partneri
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
@@ -33,7 +33,7 @@ const AboutSummary: React.FC = () => {
                   <Target className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-2">Misyonumuz</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">Misyonumuz</h3>
                   <p className="text-gray-600">
                     Müşterilerimizin emlak yatırımlarında en doğru kararları vermelerini sağlamak.
                   </p>
@@ -41,11 +41,11 @@ const AboutSummary: React.FC = () => {
               </div>
 
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Eye className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-2">Vizyonumuz</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">Vizyonumuz</h3>
                   <p className="text-gray-600">
                     Adalar bölgesinde gayrimenkul sektörünün lider firması olmak.
                   </p>
@@ -56,7 +56,7 @@ const AboutSummary: React.FC = () => {
             <div className="pt-4">
               <a
                 href="/biz-kimiz"
-                className="bg-blue-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
+                className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
               >
                 Daha Fazla Bilgi
               </a>
@@ -71,7 +71,7 @@ const AboutSummary: React.FC = () => {
                 alt="Adalar Gayrimenkul Ofis"
                 className="w-full h-80 object-cover rounded-2xl shadow-xl"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent rounded-2xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent rounded-2xl" />
             </div>
 
             <div className="grid grid-cols-2 gap-6">
@@ -83,7 +83,7 @@ const AboutSummary: React.FC = () => {
                   <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <stat.icon className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-2xl font-bold text-blue-900 mb-1">{stat.number}</p>
+                  <p className="text-2xl font-bold text-gray-900 mb-1">{stat.number}</p>
                   <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
                 </div>
               ))}

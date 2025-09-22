@@ -3,7 +3,7 @@ import { MapPin, Phone, Mail, Instagram, Facebook, Twitter } from 'lucide-react'
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
       {/* Background Animation */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-40 h-40 bg-red-500 rounded-full blur-3xl animate-pulse" />
@@ -105,19 +105,19 @@ const Footer: React.FC = () => {
                 href="https://www.instagram.com/realtyworld.adalar?igsh=am12NXN1amVvcTJ5"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-blue-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
+                className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
               >
                 <Instagram className="w-6 h-6" />
               </a>
               <a
                 href="#"
-                className="w-12 h-12 bg-blue-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
+                className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
               >
                 <Facebook className="w-6 h-6" />
               </a>
               <a
                 href="#"
-                className="w-12 h-12 bg-blue-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
+                className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center hover:bg-red-600 transition-all duration-300 transform hover:scale-110 hover:rotate-12"
               >
                 <Twitter className="w-6 h-6" />
               </a>
@@ -125,7 +125,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-blue-800">
+        <div className="mt-16 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-blue-200 text-sm">
               © 2024 Adalar Gayrimenkul. Tüm hakları saklıdır.

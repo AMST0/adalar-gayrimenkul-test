@@ -339,13 +339,13 @@ const AdminPanel: React.FC = () => {
 
   const renderDashboard = () => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-      <div className="bg-blue-500 text-white p-4 md:p-6 rounded-lg">
+      <div className="bg-gray-900 text-white p-4 md:p-6 rounded-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
           <div>
-            <p className="text-blue-100 text-sm md:text-base">Toplam Danışman</p>
+            <p className="text-gray-100 text-sm md:text-base">Toplam Danışman</p>
             <p className="text-2xl md:text-3xl font-bold">{agents.filter(a => a.isActive).length}</p>
           </div>
-          <Users className="w-8 h-8 md:w-12 md:h-12 text-blue-200 mt-2 md:mt-0" />
+          <Users className="w-8 h-8 md:w-12 md:h-12 text-gray-200 mt-2 md:mt-0" />
         </div>
       </div>
       <div className="bg-green-500 text-white p-4 md:p-6 rounded-lg">
@@ -402,7 +402,7 @@ const AdminPanel: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setEditingItem(agent); setShowForm(true); }}
-                  className="p-1.5 md:p-2 text-blue-600 hover:bg-blue-50 rounded"
+                  className="p-1.5 md:p-2 text-gray-600 hover:bg-gray-50 rounded"
                 >
                   <Edit className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
@@ -460,7 +460,7 @@ const AdminPanel: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setEditingItem(property); setShowForm(true); }}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                  className="p-2 text-gray-600 hover:bg-gray-50 rounded"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
@@ -506,7 +506,7 @@ const AdminPanel: React.FC = () => {
         <h2 className="text-2xl font-bold">Ana Sayfa Slider</h2>
         <button
           onClick={() => { setShowForm(true); setEditingItem(null); }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center space-x-2"
+          className="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
           <span>Yeni Slide Ekle</span>
@@ -529,7 +529,7 @@ const AdminPanel: React.FC = () => {
             <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={() => { setEditingItem(slide); setShowForm(true); }}
-                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
+                className="bg-gray-900 text-white p-2 rounded-full hover:bg-gray-800"
               >
                 <Edit className="w-4 h-4" />
               </button>
@@ -616,7 +616,7 @@ const AdminPanel: React.FC = () => {
       `}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-blue-900">Admin Panel</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Panel</h1>
           <Button variant="danger" onClick={logout} className="w-full sm:w-auto">
             Çıkış Yap
           </Button>
@@ -628,7 +628,7 @@ const AdminPanel: React.FC = () => {
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
-              className="w-full p-4 text-lg font-semibold bg-blue-900 text-white border-0 outline-none"
+              className="w-full p-4 text-lg font-semibold bg-gray-900 text-white border-0 outline-none"
             >
               {tabs.map((tab) => (
                 <option key={tab.id} value={tab.id}>
@@ -646,7 +646,7 @@ const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 px-4 lg:px-6 py-4 font-semibold transition-colors whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-blue-900 text-white'
+                    ? 'bg-gray-900 text-white'
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -689,7 +689,7 @@ const AdminPanel: React.FC = () => {
                         alert('Hata: ' + (error as Error).message);
                       }
                     }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
                   >
                     Yenile
                   </button>
@@ -719,7 +719,7 @@ const AdminPanel: React.FC = () => {
                             <td className="px-3 py-4 border-b">
                               <div className="flex items-center">
                                 <div className="flex-shrink-0 h-8 w-8">
-                                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                  <div className="h-8 w-8 rounded-full bg-gray-900 flex items-center justify-center">
                                     <span className="text-xs font-medium text-white">{t.initials}</span>
                                   </div>
                                 </div>

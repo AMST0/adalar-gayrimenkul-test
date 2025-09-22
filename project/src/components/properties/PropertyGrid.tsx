@@ -41,7 +41,7 @@ const PropertyGrid: React.FC = () => {
             <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Square className="w-12 h-12 text-red-600" />
             </div>
-            <h3 className="text-3xl font-bold text-blue-900 mb-4">Yakında Yeni Arsalar</h3>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Yakında Yeni Arsalar</h3>
             <p className="text-gray-600 text-lg mb-8">
               Adalar'ın en değerli arsaları çok yakında burada olacak.
             </p>
@@ -63,7 +63,7 @@ const PropertyGrid: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <span className="text-red-600 font-bold text-lg">Premium Arsalar</span>
-          <h2 className="text-4xl md:text-5xl font-bold text-blue-900 mb-6 mt-2">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 mt-2">
             Adalar'ın En Değerli Toprakları
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
@@ -97,22 +97,22 @@ const PropertyGrid: React.FC = () => {
 
                 {/* Featured Badge */}
                 {property.isFeatured && (
-                  <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-900 px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                  <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-3 py-1 rounded-full text-sm font-bold shadow-lg">
                     ⭐ Öne Çıkan
                   </div>
                 )}
 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-blue-900/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gray-900/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
                   <div className="text-center text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                     <h4 className="text-xl font-bold mb-2">Detayları Görüntüle</h4>
-                    <p className="text-blue-200">Daha fazla bilgi için tıklayın</p>
+                    <p className="text-gray-200">Daha fazla bilgi için tıklayın</p>
                   </div>
                 </div>
               </div>
               
               <div className="p-8">
-                <h3 className="text-2xl font-bold text-blue-900 mb-3 group-hover:text-red-600 transition-colors duration-300">
+                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors duration-300">
                   {property.title}
                 </h3>
                 
@@ -143,7 +143,7 @@ const PropertyGrid: React.FC = () => {
                     İletişime Geç
                   </a>
                   <button
-                    className="flex-1 border-2 border-blue-900 text-blue-900 py-3 px-4 rounded-xl font-bold hover:bg-blue-900 hover:text-white transition-all duration-300 text-center transform hover:scale-105"
+                    className="flex-1 border-2 border-gray-900 text-gray-900 py-3 px-4 rounded-xl font-bold hover:bg-gray-900 hover:text-white transition-all duration-300 text-center transform hover:scale-105"
                   >
                     Detaylar
                   </button>
@@ -159,7 +159,7 @@ const PropertyGrid: React.FC = () => {
             <button
               onClick={prevPage}
               disabled={currentPage === 0}
-              className="flex items-center space-x-2 px-6 py-3 bg-blue-900 text-white rounded-xl hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
+              className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Önceki</span>
@@ -184,7 +184,7 @@ const PropertyGrid: React.FC = () => {
             <button
               onClick={nextPage}
               disabled={currentPage === totalPages - 1}
-              className="flex items-center space-x-2 px-6 py-3 bg-blue-900 text-white rounded-xl hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
+              className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold"
             >
               <span>Sonraki</span>
               <ChevronRight className="w-5 h-5" />

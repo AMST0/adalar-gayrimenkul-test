@@ -9,7 +9,7 @@ const FeaturedAgentCards: React.FC = () => {
   if (featuredAgents.length === 0) return null;
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white">
+    <section className="py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -57,7 +57,7 @@ const FeaturedAgentCards: React.FC = () => {
                       </a>
                       <a
                         href={`mailto:${agent.email}`}
-                        className="flex-1 bg-blue-900 text-white py-2 px-3 rounded-lg font-semibold text-center text-sm hover:bg-blue-800 transition-colors"
+                        className="flex-1 bg-gray-900 text-white py-2 px-3 rounded-lg font-semibold text-center text-sm hover:bg-gray-800 transition-colors"
                       >
                         Mail
                       </a>
@@ -72,7 +72,7 @@ const FeaturedAgentCards: React.FC = () => {
                     <span className="text-amber-600 font-semibold text-sm">Uzman Danışman</span>
                   </div>
                   
-                  <h3 className="text-2xl font-bold text-blue-900 mb-2">{agent.name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{agent.name}</h3>
                   <p className="text-gray-600 mb-4">{agent.title}</p>
 
                   {/* Specialties */}
@@ -80,7 +80,7 @@ const FeaturedAgentCards: React.FC = () => {
                     {agent.specialties.map((specialty, idx) => (
                       <span
                         key={idx}
-                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium"
+                        className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium"
                       >
                         {specialty}
                       </span>

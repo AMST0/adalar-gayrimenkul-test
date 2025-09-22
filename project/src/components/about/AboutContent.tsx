@@ -28,7 +28,7 @@ const AboutContent: React.FC = () => {
   return (
     <div className="pt-24 pb-16">
       {/* Hero Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-900 to-blue-800 text-white">
+      <section className="py-16 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
@@ -63,7 +63,7 @@ const AboutContent: React.FC = () => {
 
             {/* Vision */}
             <div className="group hover:scale-105 transition-transform duration-500">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500">
                 <div className="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform duration-300">
                   <Eye className="w-8 h-8 text-white" />
                 </div>
@@ -101,7 +101,7 @@ const AboutContent: React.FC = () => {
                   animation: 'fadeInUp 0.8s ease-out both',
                 }}
               >
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-900 to-blue-800 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
                   <value.icon className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-blue-900 mb-4">{value.title}</h3>
@@ -145,7 +145,7 @@ const AboutContent: React.FC = () => {
                 alt="Adalar Gayrimenkul Hikayesi"
                 className="w-full h-96 object-cover rounded-2xl shadow-xl"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent rounded-2xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 to-transparent rounded-2xl" />
               <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm p-4 rounded-lg">
                 <p className="font-bold text-blue-900 text-lg">15+ Yıl</p>
                 <p className="text-gray-700">Sektör Deneyimi</p>
@@ -156,13 +156,13 @@ const AboutContent: React.FC = () => {
       </section>
 
       {/* Statistics */}
-      <section className="py-16 bg-gradient-to-r from-blue-900 to-blue-800 text-white">
+      <section className="py-16 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Başarılarımız Rakamlarla
             </h2>
-            <p className="text-blue-200 text-lg">
+            <p className="text-gray-200 text-lg">
               15 yıllık yolculuğumuzda elde ettiğimiz başarılar
             </p>
           </div>

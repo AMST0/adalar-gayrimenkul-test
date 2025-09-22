@@ -31,7 +31,7 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="pt-24 pb-16 min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center">
+    <div className="pt-24 pb-16 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
       <div className="max-w-md w-full mx-4">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
           {/* Header */}

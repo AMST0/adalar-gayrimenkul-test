@@ -174,7 +174,7 @@ const CustomerTestimonials: React.FC = () => {
   if (activeTestimonials.length === 0) return null;
 
    return (
-     <section id="testimonials-section" className="py-16 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 relative overflow-hidden">
+     <section id="testimonials-section" className="py-16 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-20 w-32 h-32 bg-amber-500 rounded-full blur-3xl animate-pulse" />
@@ -236,7 +236,7 @@ const CustomerTestimonials: React.FC = () => {
                     Admin onayından sonra sitede yayınlanacaktır.
                   </p>
                 </div>
-                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
                   <p className="text-blue-800 text-sm font-medium">
                     💡 Yorumunuz incelendikten sonra anasayfada görünecektir
                   </p>
@@ -245,7 +245,7 @@ const CustomerTestimonials: React.FC = () => {
             ) : (
               <div className="p-8">
                 <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                     </svg>
@@ -300,7 +300,7 @@ const CustomerTestimonials: React.FC = () => {
                   </div>
                   <button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <span className="flex items-center justify-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
