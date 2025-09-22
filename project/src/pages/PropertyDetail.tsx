@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
-import { ArrowLeft, MapPin, Phone, Mail, Image as ImageIcon, ChevronLeft, ChevronRight, Home, User, Briefcase } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Mail, Image as ImageIcon, ChevronLeft, ChevronRight, Home, User, Briefcase, Download, Share, Share2, FileText, Instagram } from 'lucide-react';
+import { generatePropertyPDF, generateInstagramStory, PropertyForShare } from '../utils/shareUtils';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -9,6 +10,8 @@ const PropertyDetail: React.FC = () => {
   const { properties, agents } = useData();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
 
   const property = properties.find(p => p.id === id);
   
@@ -94,6 +97,84 @@ const PropertyDetail: React.FC = () => {
     }).format(price);
   };
 
+  // PDF raporu oluştur
+  const handleGeneratePDF = async () => {
+    if (!property) return;
+    
+    setIsGeneratingPDF(true);
+    try {
+      const propertyForShare: PropertyForShare = {
+        id: property.id,
+        title: property.title,
+        price: property.price,
+        location: property.location,
+        size: property.size,
+        description: property.description,
+        images: images,
+        property_type: property.nitelik || 'Arsa',
+        agent: agent ? {
+          name: agent.name,
+          phone: agent.phone,
+          email: agent.email,
+          image: agent.image
+        } : undefined,
+        zoning: property.nitelik,
+        coastline: undefined,
+        island: property.ada,
+        deed_status: undefined,
+        electricity: undefined,
+        water: undefined,
+        road_access: undefined
+      };
+      
+      await generatePropertyPDF(propertyForShare);
+    } catch (error) {
+      console.error('PDF oluşturulurken hata:', error);
+      alert('PDF oluşturulurken bir hata oluştu.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Instagram story oluştur
+  const handleGenerateStory = async () => {
+    if (!property) return;
+    
+    setIsGeneratingStory(true);
+    try {
+      const propertyForShare: PropertyForShare = {
+        id: property.id,
+        title: property.title,
+        price: property.price,
+        location: property.location,
+        size: property.size,
+        description: property.description,
+        images: images,
+        property_type: property.nitelik || 'Arsa',
+        agent: agent ? {
+          name: agent.name,
+          phone: agent.phone,
+          email: agent.email,
+          image: agent.image
+        } : undefined,
+        zoning: property.nitelik,
+        coastline: undefined,
+        island: property.ada,
+        deed_status: undefined,
+        electricity: undefined,
+        water: undefined,
+        road_access: undefined
+      };
+      
+      await generateInstagramStory(propertyForShare);
+    } catch (error) {
+      console.error('Instagram story oluşturulurken hata:', error);
+      alert('Instagram story oluşturulurken bir hata oluştu.');
+    } finally {
+      setIsGeneratingStory(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       {/* Breadcrumb Navigation */}
@@ -120,7 +201,7 @@ const PropertyDetail: React.FC = () => {
             <ArrowLeft className="w-5 h-5 mr-2" />
             Arsalara Geri Dön
           </button>
-          
+
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
           <div className="flex items-center text-gray-600">
             <MapPin className="w-4 h-4 mr-1" />
@@ -427,6 +508,57 @@ const PropertyDetail: React.FC = () => {
                       </a>
                     )}
                   </div>
+                  
+                  {/* Paylaşım Butonları */}
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h4 className="text-sm font-bold text-gray-900 mb-3">İlanı Paylaş</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={handleGeneratePDF}
+                        disabled={isGeneratingPDF}
+                        className="flex items-center bg-red-600 text-white px-3 py-1.5 rounded text-xs hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isGeneratingPDF ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                        ) : (
+                          <FileText className="w-3 h-3 mr-1" />
+                        )}
+                        PDF
+                      </button>
+                      
+                      <button
+                        onClick={handleGenerateStory}
+                        disabled={isGeneratingStory}
+                        className="flex items-center bg-gradient-to-r from-purple-600 to-red-600 text-white px-3 py-1.5 rounded text-xs hover:from-purple-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isGeneratingStory ? (
+                          <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                        ) : (
+                          <Instagram className="w-3 h-3 mr-1" />
+                        )}
+                        Story
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (navigator.share) {
+                            navigator.share({
+                              title: property.title,
+                              text: `${property.title} - ${property.location} - ${formatPrice(property.price)}`,
+                              url: window.location.href
+                            });
+                          } else {
+                            navigator.clipboard.writeText(window.location.href);
+                            alert('Bağlantı kopyalandı!');
+                          }
+                        }}
+                        className="flex items-center bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-700 transition-colors"
+                      >
+                        <Share2 className="w-3 h-3 mr-1" />
+                        Paylaş
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -446,6 +578,57 @@ const PropertyDetail: React.FC = () => {
                       <Mail className="w-5 h-5 mr-2" />
                       İletişime Geç
                     </Link>
+                    
+                    {/* Paylaşım Butonları */}
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="text-sm font-bold text-gray-900 mb-3">İlanı Paylaş</h4>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={handleGeneratePDF}
+                          disabled={isGeneratingPDF}
+                          className="flex items-center bg-red-600 text-white px-3 py-1.5 rounded text-xs hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isGeneratingPDF ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                          ) : (
+                            <FileText className="w-3 h-3 mr-1" />
+                          )}
+                          PDF
+                        </button>
+                        
+                        <button
+                          onClick={handleGenerateStory}
+                          disabled={isGeneratingStory}
+                          className="flex items-center bg-gradient-to-r from-purple-600 to-red-600 text-white px-3 py-1.5 rounded text-xs hover:from-purple-700 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isGeneratingStory ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                          ) : (
+                            <Instagram className="w-3 h-3 mr-1" />
+                          )}
+                          Story
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (navigator.share) {
+                              navigator.share({
+                                title: property.title,
+                                text: `${property.title} - ${property.location} - ${formatPrice(property.price)}`,
+                                url: window.location.href
+                              });
+                            } else {
+                              navigator.clipboard.writeText(window.location.href);
+                              alert('Bağlantı kopyalandı!');
+                            }
+                          }}
+                          className="flex items-center bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-700 transition-colors"
+                        >
+                          <Share2 className="w-3 h-3 mr-1" />
+                          Paylaş
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
