@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DataProvider } from './contexts/DataContext';
 import { AdminProvider } from './contexts/AdminContext';
 import Header from './components/common/Header';
@@ -8,70 +9,30 @@ import About from './pages/About';
 import Agents from './pages/Agents';
 import Contact from './pages/Contact';
 import Properties from './pages/Properties';
+import PropertyDetail from './pages/PropertyDetail';
 import Admin from './pages/Admin';
 
 function App() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Simple router based on pathname
-  const renderPage = () => {
-    switch (currentPath) {
-      case '/':
-        return <Home />;
-      case '/biz-kimiz':
-        return <About />;
-      case '/danismanlar':
-        return <Agents />;
-      case '/arsalar':
-        return <Properties />;
-      case '/iletisim':
-        return <Contact />;
-      case '/admin':
-        return <Admin />;
-      default:
-        if (currentPath.startsWith('/danismanlar/')) {
-          return <Agents />;
-        }
-        return <Home />;
-    }
-  };
-
-  // Handle navigation
-  useEffect(() => {
-    const handleClick = (e: Event) => {
-      const target = e.target as HTMLAnchorElement;
-      if (target.tagName === 'A' && target.href.startsWith(window.location.origin)) {
-        e.preventDefault();
-        const newPath = new URL(target.href).pathname;
-        window.history.pushState({}, '', newPath);
-        setCurrentPath(newPath);
-        window.scrollTo(0, 0);
-      }
-    };
-
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
-
   return (
     <AdminProvider>
       <DataProvider>
-        <div className="min-h-screen bg-white">
-          <Header />
-          <main>
-            {renderPage()}
-          </main>
-          <Footer />
-        </div>
+        <Router>
+          <div className="min-h-screen bg-white">
+            <Header />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/biz-kimiz" element={<About />} />
+                <Route path="/danismanlar" element={<Agents />} />
+                <Route path="/arsalar" element={<Properties />} />
+                <Route path="/arsalar/:id" element={<PropertyDetail />} />
+                <Route path="/iletisim" element={<Contact />} />
+                <Route path="/admin" element={<Admin />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
       </DataProvider>
     </AdminProvider>
   );

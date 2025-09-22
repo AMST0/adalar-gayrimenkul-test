@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Phone, Mail, Star, Award } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 
@@ -51,7 +51,7 @@ const FeaturedAgentCards: React.FC = () => {
                     <div className="flex space-x-2">
                       <a
                         href={`tel:${agent.phone}`}
-                        className="flex-1 bg-amber-500 text-white py-2 px-3 rounded-lg font-semibold text-center text-sm hover:bg-amber-600 transition-colors"
+                        className="flex-1 bg-amber-500 text-white py-2 px-3 rounded-lg font-semibold text-center text-sm hover:bg-amber-600 transition-colors flex items-center justify-center"
                       >
                         Ara
                       </a>

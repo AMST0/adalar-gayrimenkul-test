@@ -1,9 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { Phone, Mail, Star } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const FeaturedAgents: React.FC = () => {
   const { agents } = useData();
+  const { t } = useLanguage();
   const featuredAgents = agents.filter(agent => agent.isActive && agent.isFeatured);
 
   if (featuredAgents.length === 0) return null;
@@ -13,7 +15,7 @@ const FeaturedAgents: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Uzman Danışmanlarımız
+            {t.agent.featuredAgents}
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Adalar'ın en deneyimli gayrimenkul uzmanları ile rüya arsanızı bulun
@@ -40,7 +42,7 @@ const FeaturedAgents: React.FC = () => {
                 </div>
                 <div className="absolute top-4 right-4 bg-amber-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
                   <Star className="w-4 h-4 mr-1" />
-                  Uzman
+                  {t.agent.specialist}
                 </div>
               </div>
               
@@ -76,15 +78,15 @@ const FeaturedAgents: React.FC = () => {
                 <div className="flex space-x-3">
                   <a
                     href={`tel:${agent.phone}`}
-                    className="flex-1 bg-amber-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-amber-600 transition-colors duration-300 text-center text-sm"
+                    className="flex-1 bg-amber-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-amber-600 transition-colors duration-300 text-center text-sm flex items-center justify-center"
                   >
-                    Ara
+                    {t.buttons.call}
                   </a>
                   <a
                     href={`/danismanlar/${agent.id}`}
                     className="flex-1 border-2 border-gray-900 text-gray-900 py-2 px-4 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition-colors duration-300 text-center text-sm"
                   >
-                    Profil
+                    {t.buttons.profile}
                   </a>
                 </div>
               </div>
@@ -97,7 +99,7 @@ const FeaturedAgents: React.FC = () => {
             href="/danismanlar"
             className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
           >
-            Tüm Danışmanları Gör
+            {t.buttons.viewAllAgents}
           </a>
         </div>
       </div>

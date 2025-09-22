@@ -1,7 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import PropertyGrid from '../components/properties/PropertyGrid';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Properties: React.FC = () => {
+  const { t } = useLanguage();
+  
   return (
     <div className="pt-24 pb-16">
       {/* Page Header */}
@@ -16,10 +19,10 @@ const Properties: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
           <div className="space-y-6 animate-fade-in">
             <span className="inline-block bg-red-600 text-white px-6 py-2 rounded-full font-bold text-lg">
-              Premium Collection
+              {t.common.premiumCollection}
             </span>
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              Arsalarımız
+              {t.properties}
             </h1>
             <p className="text-xl md:text-2xl text-blue-200 max-w-4xl mx-auto leading-relaxed">
               Adalar'ın en değerli ve yatırım potansiyeli yüksek arsalarını keşfedin. 

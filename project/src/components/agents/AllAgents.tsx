@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Phone, Mail, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const AllAgents: React.FC = () => {
   const { agents } = useData();
+  const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(0);
   const activeAgents = agents.filter(agent => agent.isActive && !agent.isFeatured);
   const itemsPerPage = 6;
@@ -41,7 +43,7 @@ const AllAgents: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Tüm Danışmanlarımız
+            {t.agent.allAgents}
           </h2>
           <p className="text-gray-600 text-lg">
             Deneyimli ekibimizle size en iyi hizmeti sunuyoruz
@@ -100,7 +102,7 @@ const AllAgents: React.FC = () => {
                 <div className="flex space-x-2">
                   <a
                     href={`tel:${agent.phone}`}
-                    className="flex-1 bg-amber-500 text-white py-2 px-3 rounded-lg font-semibold hover:bg-amber-600 transition-colors duration-300 text-center text-sm"
+                    className="flex-1 bg-amber-500 text-white py-2 px-3 rounded-lg font-semibold hover:bg-amber-600 transition-colors duration-300 text-center text-sm flex items-center justify-center"
                   >
                     Ara
                   </a>
@@ -150,7 +152,7 @@ const AllAgents: React.FC = () => {
                         <div className="mt-4 flex space-x-2">
                           <a
                             href={`tel:${agent.phone}`}
-                            className="flex-1 bg-amber-500 text-white py-2 px-3 rounded-lg text-center text-sm font-semibold"
+                            className="flex-1 bg-amber-500 text-white py-2 px-3 rounded-lg text-center text-sm font-semibold flex items-center justify-center"
                           >
                             Ara
                           </a>

@@ -1,22 +1,25 @@
-import React from 'react';
+﻿import React from 'react';
 import { Target, Eye, Award, Users, Shield, Handshake } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const AboutContent: React.FC = () => {
+  const { t } = useLanguage();
+  
   const values = [
     {
       icon: Shield,
-      title: 'Güvenilirlik',
-      description: 'Müşterilerimizin güvenini kazanmak ve korumak için şeffaf ve dürüst hizmet veriyoruz.',
+      title: t.aboutPage.reliability.title,
+      description: t.aboutPage.reliability.description,
     },
     {
       icon: Handshake,
-      title: 'Müşteri Odaklılık',
-      description: 'Her müşterimizin ihtiyaçlarını anlayarak özel çözümler üretiyoruz.',
+      title: t.aboutPage.customerFocus.title,
+      description: t.aboutPage.customerFocus.description,
     },
     {
       icon: Award,
-      title: 'Profesyonellik',
-      description: 'Sektördeki deneyimimiz ve uzmanlığımızla en iyi hizmeti sunuyoruz.',
+      title: t.aboutPage.professionalism.title,
+      description: t.aboutPage.professionalism.description,
     },
     {
       icon: Users,
@@ -32,11 +35,10 @@ const AboutContent: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-              Biz Kimiz
+              {t.aboutPage.title}
             </h1>
             <p className="text-xl md:text-2xl text-blue-200 leading-relaxed animate-slide-up">
-              Adalar'da 15 yılı aşkın deneyimimizle müşterilerimizin emlak 
-              yatırımlarında doğru seçimler yapmalarına yardımcı oluyoruz.
+              {t.aboutPage.heroDescription}
             </p>
           </div>
         </div>
@@ -52,11 +54,11 @@ const AboutContent: React.FC = () => {
                 <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform duration-300">
                   <Target className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-blue-900 mb-4">Misyonumuz</h3>
+                <h3 className="text-2xl font-bold text-blue-900 mb-4">
+                  {t.aboutPage.mission}
+                </h3>
                 <p className="text-gray-700 text-lg leading-relaxed">
-                  Müşterilerimizin gayrimenkul yatırımlarında en doğru kararları vermelerini sağlamak, 
-                  güvenilir ve profesyonel hizmet anlayışımızla sektörde fark yaratmak. 
-                  Her müşterimizi özel hissettirerek, onların rüyalarını gerçeğe dönüştürmek.
+                  {t.aboutPage.missionDescription}
                 </p>
               </div>
             </div>
@@ -169,10 +171,10 @@ const AboutContent: React.FC = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { number: '500+', label: 'Mutlu Müşteri' },
-              { number: '1200+', label: 'Başarılı Satış' },
-              { number: '50+', label: 'Aktif Proje' },
-              { number: '15+', label: 'Yıl Tecrübe' },
+              { number: '500+', label: t.aboutPage.clients },
+              { number: '1200+', label: t.common.successfulSales },
+              { number: '50+', label: t.common.activeProjects },
+              { number: '15+', label: t.aboutPage.experience },
             ].map((stat, index) => (
               <div key={index} className="text-center group">
                 <div className="text-4xl md:text-5xl font-bold text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-300">

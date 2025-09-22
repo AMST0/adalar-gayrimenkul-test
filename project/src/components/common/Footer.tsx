@@ -1,7 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import { MapPin, Phone, Mail, Instagram, Facebook, Twitter } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const Footer: React.FC = () => {
+  const { t } = useLanguage();
+  
   return (
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden">
       {/* Background Animation */}
@@ -26,7 +29,7 @@ const Footer: React.FC = () => {
           {/* Quick Links */}
           <div className="space-y-6">
             <h4 className="text-xl font-bold text-white relative">
-              Hızlı Erişim
+              {t.common.quickAccess}
               <span className="absolute bottom-0 left-0 w-8 h-1 bg-red-600 rounded-full"></span>
             </h4>
             <nav className="space-y-3">
@@ -34,25 +37,25 @@ const Footer: React.FC = () => {
                 href="/" 
                 className="block text-blue-200 hover:text-white transition-colors duration-300 hover:translate-x-2 transform"
               >
-                → Ana Sayfa
+                → {t.home}
               </a>
               <a 
                 href="/biz-kimiz" 
                 className="block text-blue-200 hover:text-white transition-colors duration-300 hover:translate-x-2 transform"
               >
-                → Biz Kimiz
+                → {t.about}
               </a>
               <a 
                 href="/danismanlar" 
                 className="block text-blue-200 hover:text-white transition-colors duration-300 hover:translate-x-2 transform"
               >
-                → Danışmanlar
+                → {t.agents}
               </a>
               <a 
                 href="/arsalar" 
                 className="block text-blue-200 hover:text-white transition-colors duration-300 hover:translate-x-2 transform"
               >
-                → Arsalar
+                → {t.properties}
               </a>
               <a 
                 href="/iletisim" 
@@ -66,7 +69,7 @@ const Footer: React.FC = () => {
           {/* Contact Info */}
           <div className="space-y-6">
             <h4 className="text-xl font-bold text-white relative">
-              İletişim Bilgileri
+              {t.common.contactInfo}
               <span className="absolute bottom-0 left-0 w-8 h-1 bg-red-600 rounded-full"></span>
             </h4>
             <div className="space-y-4">
@@ -128,7 +131,7 @@ const Footer: React.FC = () => {
         <div className="mt-16 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-blue-200 text-sm">
-              © 2024 Adalar Gayrimenkul. Tüm hakları saklıdır.
+              © 2024 Adalar Gayrimenkul. {t.common.rights}
             </p>
             <div className="flex space-x-8 text-sm">
               <a href="#" className="text-blue-200 hover:text-white transition-colors duration-300">

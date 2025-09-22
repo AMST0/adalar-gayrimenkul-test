@@ -1,9 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { MapPin, Square, TrendingUp, ArrowRight, Star } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const FeaturedProperties: React.FC = () => {
   const { properties } = useData();
+  const { t } = useLanguage();
   const featuredProperties = properties.filter(property => property.isActive && property.isFeatured);
 
   if (featuredProperties.length === 0) return null;
@@ -28,13 +30,13 @@ const FeaturedProperties: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-16">
           <div className="inline-block bg-red-600 text-white px-6 py-2 rounded-full font-bold text-lg mb-6">
-            Premium Collection
+            {t.common.premiumCollection}
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-blue-900 mb-6">
-            Öne Çıkan Arsalarımız
+            {t.property.featuredProperties}
           </h2>
           <p className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed">
-            Adalar'ın en değerli ve yatırım potansiyeli yüksek arsalarından özenle seçilmiş örnekler
+            Yatırım potansiyeli yüksek, eşsiz manzaralı arsalarımızla geleceğinizi planlayın
           </p>
         </div>
 
@@ -122,7 +124,7 @@ const FeaturedProperties: React.FC = () => {
             className="inline-flex items-center bg-gradient-to-r from-gray-900 to-gray-800 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl group"
           >
             <TrendingUp className="mr-3 w-6 h-6" />
-            Tüm Arsaları Keşfet
+            {t.property.allProperties} {t.buttons.explore}
             <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
           </a>
         </div>

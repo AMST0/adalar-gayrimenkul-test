@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Send, MapPin, Phone, Mail, Clock, MessageCircle, CheckCircle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ContactContent: React.FC = () => {
   const { addContactRequest } = useData();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -54,13 +56,13 @@ const ContactContent: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
           <div className="animate-fade-in">
             <span className="inline-block bg-red-600 text-white px-6 py-2 rounded-full font-bold text-lg mb-6">
-              İletişim
+              {t.contact}
             </span>
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              Bizimle İletişime Geçin
+              {t.contactPage.title}
             </h1>
             <p className="text-xl md:text-2xl text-blue-200 max-w-4xl mx-auto">
-              Rüya arsanızı bulmak için buradayız. Uzman ekibimiz size en uygun çözümleri sunacak.
+              {t.contactPage.heroSubtitle}
             </p>
           </div>
         </div>
@@ -76,9 +78,9 @@ const ContactContent: React.FC = () => {
                 <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <MessageCircle className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-blue-900 mb-4">Mesaj Gönderin</h3>
+                <h3 className="text-3xl font-bold text-blue-900 mb-4">{t.contactPage.form.sendMessage}</h3>
                 <p className="text-gray-600">
-                  Size en kısa sürede dönüş yapacağız
+                  {t.contactPage.responseMessage}
                 </p>
               </div>
               
@@ -86,7 +88,7 @@ const ContactContent: React.FC = () => {
                 <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-2xl mb-8 flex items-center animate-bounce">
                   <CheckCircle className="w-5 h-5 mr-3 text-green-600" />
                   <span className="font-semibold">
-                    Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.
+                    {t.contactPage.form.successMessage}
                   </span>
                 </div>
               )}
@@ -94,7 +96,7 @@ const ContactContent: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="relative group">
                   <label htmlFor="name" className="block text-sm font-bold text-gray-700 mb-3">
-                    Adınız Soyadınız *
+                    {t.contactPage.form.nameRequired}
                   </label>
                   <input
                     type="text"
@@ -104,13 +106,13 @@ const ContactContent: React.FC = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 text-lg group-hover:border-red-300"
-                    placeholder="Adınızı ve soyadınızı girin"
+                    placeholder={t.contactPage.form.namePlaceholder}
                   />
                 </div>
 
                 <div className="relative group">
                   <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-3">
-                    E-posta Adresiniz *
+                    {t.contactPage.email} *
                   </label>
                   <input
                     type="email"
@@ -120,14 +122,14 @@ const ContactContent: React.FC = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 text-lg group-hover:border-red-300"
-                    placeholder="E-posta adresinizi girin"
+                    placeholder={t.contactPage.form.emailPlaceholder}
                   />
                 </div>
 
 
                 <div className="relative group">
                   <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-3">
-                    Telefon Numaranız *
+                    {t.contactPage.form.phoneRequired}
                   </label>
                   <input
                     type="tel"
@@ -137,13 +139,13 @@ const ContactContent: React.FC = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 text-lg group-hover:border-red-300"
-                    placeholder="Telefon numaranızı girin"
+                    placeholder={t.contactPage.form.phonePlaceholder}
                   />
                 </div>
 
                 <div className="relative group">
                   <label htmlFor="message" className="block text-sm font-bold text-gray-700 mb-3">
-                    Mesajınız *
+                    {t.contactPage.form.messageRequired}
                   </label>
                   <textarea
                     id="message"
@@ -153,7 +155,7 @@ const ContactContent: React.FC = () => {
                     required
                     rows={6}
                     className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 focus:border-red-500 transition-all duration-300 resize-none text-lg group-hover:border-red-300"
-                    placeholder="Nasıl yardımcı olabiliriz? Aradığınız arsa özelliklerini belirtir misiniz?"
+                    placeholder={t.contactPage.form.messagePlaceholder}
                   />
                 </div>
 
@@ -167,7 +169,7 @@ const ContactContent: React.FC = () => {
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      <span>Mesaj Gönder</span>
+                      <span>{t.contactPage.form.sendMessage}</span>
                     </>
                   )}
                 </button>
@@ -182,7 +184,7 @@ const ContactContent: React.FC = () => {
                   <div className="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:rotate-12 transition-transform duration-300">
                     <Phone className="w-8 h-8 text-white" />
                   </div>
-                  <h4 className="font-bold text-blue-900 text-xl mb-3">Telefon</h4>
+                  <h4 className="font-bold text-blue-900 text-xl mb-3">{t.contactPage.phone}</h4>
                   <p className="text-gray-600 mb-2">+90 216 382 1234</p>
                   <p className="text-gray-600">+90 555 123 4567</p>
                 </div>
@@ -191,7 +193,7 @@ const ContactContent: React.FC = () => {
                   <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:rotate-12 transition-transform duration-300">
                     <Mail className="w-8 h-8 text-white" />
                   </div>
-                  <h4 className="font-bold text-blue-900 text-xl mb-3">E-posta</h4>
+                  <h4 className="font-bold text-blue-900 text-xl mb-3">{t.contactPage.email}</h4>
                   <p className="text-gray-600">info@adalargayrimenkul.com</p>
                   <p className="text-gray-600">satis@adalargayrimenkul.com</p>
                 </div>
@@ -203,7 +205,7 @@ const ContactContent: React.FC = () => {
                     <MapPin className="w-8 h-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-blue-900 text-xl mb-3">Adres</h4>
+                    <h4 className="font-bold text-blue-900 text-xl mb-3">{t.contactPage.address}</h4>
                     <p className="text-gray-600 leading-relaxed">
                       Çınar Mahallesi, Rıfkı Tongsir Caddesi, <br />
                       Küçükyalı Nidapark Maltepe/İstanbul
@@ -213,7 +215,7 @@ const ContactContent: React.FC = () => {
                       className="inline-flex items-center mt-4 text-red-600 hover:text-red-700 font-semibold group-hover:translate-x-2 transition-all duration-300"
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      Haritada Göster
+                      {t.contactPage.showOnMap}
                     </a>
                   </div>
                 </div>
@@ -225,11 +227,11 @@ const ContactContent: React.FC = () => {
                     <Clock className="w-8 h-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-blue-900 text-xl mb-3">Çalışma Saatleri</h4>
+                    <h4 className="font-bold text-blue-900 text-xl mb-3">{t.contactPage.workingHours}</h4>
                     <div className="space-y-2 text-gray-600">
-                      <p><span className="font-semibold">Pazartesi - Cuma:</span> 09:00 - 18:00</p>
-                      <p><span className="font-semibold">Cumartesi:</span> 09:00 - 17:00</p>
-                      <p><span className="font-semibold">Pazar:</span> 10:00 - 16:00</p>
+                      <p><span className="font-semibold">{t.contactPage.monday} - {t.contactPage.friday}:</span> 09:00 - 18:00</p>
+                      <p><span className="font-semibold">{t.contactPage.saturday}:</span> 09:00 - 17:00</p>
+                      <p><span className="font-semibold">{t.contactPage.sunday}:</span> 10:00 - 16:00</p>
                     </div>
                   </div>
                 </div>
@@ -243,9 +245,9 @@ const ContactContent: React.FC = () => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-blue-900 mb-4">Ofis Konumumuz</h2>
+            <h2 className="text-4xl font-bold text-blue-900 mb-4">{t.contactPage.officeLocation}</h2>
             <p className="text-gray-600 text-lg">
-              Küçükyalı Nidapark konumumuzda sizleri bekliyoruz
+              {t.contactPage.locationDescription}
             </p>
           </div>
           

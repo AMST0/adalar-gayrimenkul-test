@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, TrendingUp } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const HeroSlider: React.FC = () => {
   const { sliderItems } = useData();
+  const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const activeSlides = sliderItems.filter(item => item.isActive);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
-    }, 6000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [activeSlides.length]);
@@ -25,33 +27,11 @@ const HeroSlider: React.FC = () => {
 
   if (activeSlides.length === 0) {
     return (
-      <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center relative overflow-hidden">
-        {/* Background Animation */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-20 left-20 w-40 h-40 bg-red-500 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-20 w-32 h-32 bg-yellow-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
-        </div>
-
-        <div className="text-center text-white relative z-10">
-          <div className="mb-8">
-            <Star className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-bounce" />
-          </div>
-          <h1 className="text-3xl sm:text-5xl md:text-8xl font-bold mb-4 sm:mb-6 animate-fade-in">
-            <img src="https://i.hizliresim.com/rs5qoel.png" alt="" />
-          </h1>
-          <p className="text-base sm:text-xl md:text-3xl text-blue-200 mb-4 sm:mb-8 animate-slide-up">
-            Premium Real Estate Solutions
-          </p>
-          <div className="animate-slide-up" style={{ animationDelay: '0.5s' }}>
-            <a
-              href="/arsalar"
-              className="inline-flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 sm:px-8 sm:py-4 rounded-xl font-bold hover:from-red-700 hover:to-red-800 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl"
-            >
-              <TrendingUp className="mr-2 w-5 h-5" />
-              Arsaları Keşfet
-            </a>
-          </div>
+      <div className="h-32 flex items-center justify-center bg-gray-50">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-red-500 rounded-full animate-bounce"></div>
+          <div className="w-4 h-4 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-4 h-4 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
         </div>
       </div>
     );
@@ -63,7 +43,7 @@ const HeroSlider: React.FC = () => {
       {activeSlides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-all duration-1000 ${
+          className={`absolute inset-0 transition-all duration-300 ${
             index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
           }`}
         >
@@ -91,7 +71,7 @@ const HeroSlider: React.FC = () => {
                   <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-white/20">
                     <span className="text-yellow-400 text-xl mr-2">📍</span>
                     <span className="text-white font-bold text-lg">
-                      Adalar Gayrimenkul / {slide.location}
+                      {t.hero.location} / {slide.location}
                     </span>
                   </div>
                 </div>
@@ -104,7 +84,7 @@ const HeroSlider: React.FC = () => {
                 </h1>
                 
                 {/* Subtitle */}
-                <p className="text-2xl md:text-4xl mb-10 text-blue-100 animate-fade-in-delay-2 font-light">
+                <p className="text-2xl md:text-4xl mb-10 text-gray-100 animate-fade-in-delay-2 font-light">
                   {slide.subtitle}
                 </p>
                 
@@ -198,19 +178,19 @@ const HeroSlider: React.FC = () => {
         }
 
         .animate-fade-in-delay {
-          animation: fade-in-delay 1s ease-out 0.5s both;
+          animation: fade-in-delay 0.3s ease-out 0s both;
         }
 
         .animate-fade-in-delay-2 {
-          animation: fade-in-delay-2 1s ease-out 1s both;
+          animation: fade-in-delay-2 0.3s ease-out 0s both;
         }
 
         .animate-slide-up-big {
-          animation: slide-up-big 1.2s ease-out 0.3s both;
+          animation: slide-up-big 0.3s ease-out 0s both;
         }
 
         .animate-slide-up-delay {
-          animation: slide-up-delay 1s ease-out 1.5s both;
+          animation: slide-up-delay 0.3s ease-out 0s both;
         }
 
         .animate-float {

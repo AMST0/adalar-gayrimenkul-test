@@ -11,15 +11,25 @@ const ProjectLogos: React.FC = () => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
-    setIsPaused(true); // Auto-scroll'u duraklat
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX);
+    
+    // Sadece gerçek bir kaydırma varsa pause et
+    if (touchStart) {
+      const distance = Math.abs(touchStart - e.targetTouches[0].clientX);
+      if (distance > 10) { // 10px'den fazla hareket varsa
+        setIsPaused(true);
+      }
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStart || !touchEnd) {
+      setIsPaused(false);
+      return;
+    }
     
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
@@ -37,8 +47,8 @@ const ProjectLogos: React.FC = () => {
       container.scrollLeft -= 200;
     }
     
-    // Auto-scroll'u yeniden başlat
-    setTimeout(() => setIsPaused(false), 3000);
+    // Kısa bir süre sonra auto-scroll'u yeniden başlat
+    setTimeout(() => setIsPaused(false), 1500);
   };
 
   useEffect(() => {
@@ -75,8 +85,8 @@ const ProjectLogos: React.FC = () => {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
+          onMouseEnter={() => window.innerWidth >= 768 && setIsPaused(true)}
+          onMouseLeave={() => window.innerWidth >= 768 && setIsPaused(false)}
         >
           {duplicatedProjects.map((project, index) => (
             <div

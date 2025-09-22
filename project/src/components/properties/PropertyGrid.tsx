@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { MapPin, Square, TrendingUp, Phone, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MapPin, Square, TrendingUp, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const PropertyGrid: React.FC = () => {
   const { properties } = useData();
+  const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(0);
-  const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
   
   const activeProperties = properties.filter(property => property.isActive);
   const itemsPerPage = 9;
@@ -62,7 +64,7 @@ const PropertyGrid: React.FC = () => {
     <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-red-600 font-bold text-lg">Premium Arsalar</span>
+          <span className="text-red-600 font-bold text-lg">{t.common.premiumCollection}</span>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 mt-2">
             Adalar'ın En Değerli Toprakları
           </h2>
@@ -75,12 +77,11 @@ const PropertyGrid: React.FC = () => {
           {currentProperties.map((property, index) => (
             <div
               key={property.id}
-              className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 overflow-hidden transform hover:scale-105 cursor-pointer"
+              className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 overflow-hidden transform hover:scale-105"
               style={{
                 animationDelay: `${index * 100}ms`,
                 animation: 'fadeInUp 0.8s ease-out both',
               }}
-              onClick={() => setSelectedProperty(property.id)}
             >
               <div className="relative h-64 overflow-hidden">
                 <img
@@ -136,17 +137,18 @@ const PropertyGrid: React.FC = () => {
                 </p>
                 
                 <div className="flex space-x-3">
-                  <a
-                    href="/iletisim"
+                  <Link
+                    to="/iletisim"
                     className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-bold hover:from-red-700 hover:to-red-800 transition-all duration-300 text-center transform hover:scale-105 shadow-lg hover:shadow-xl"
                   >
                     İletişime Geç
-                  </a>
-                  <button
+                  </Link>
+                  <Link
+                    to={`/arsalar/${property.id}`}
                     className="flex-1 border-2 border-gray-900 text-gray-900 py-3 px-4 rounded-xl font-bold hover:bg-gray-900 hover:text-white transition-all duration-300 text-center transform hover:scale-105"
                   >
                     Detaylar
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

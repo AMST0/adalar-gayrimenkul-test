@@ -1,12 +1,15 @@
 import React from 'react';
 import { Target, Eye, Award, Users } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const AboutSummary: React.FC = () => {
+  const { t } = useLanguage();
+  
   const stats = [
-    { icon: Users, number: '500+', label: 'Mutlu Müşteri' },
-    { icon: Award, number: '15+', label: 'Yıl Tecrübe' },
-    { icon: Target, number: '1200+', label: 'Başarılı Satış' },
-    { icon: Eye, number: '50+', label: 'Aktif Proje' },
+    { icon: Users, number: '500+', label: t.aboutPage.clients },
+    { icon: Award, number: '15+', label: t.aboutPage.experience },
+    { icon: Target, number: '1200+', label: t.common.successfulSales },
+    { icon: Eye, number: '50+', label: t.common.activeProjects },
   ];
 
   return (
@@ -16,9 +19,9 @@ const AboutSummary: React.FC = () => {
           {/* Content */}
           <div className="space-y-6">
             <div className="space-y-4">
-              <span className="text-amber-500 font-semibold text-lg">Biz Kimiz</span>
+              <span className="text-amber-500 font-semibold text-lg">{t.about}</span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                Adalar'ın Güvenilir Gayrimenkul Partneri
+                {t.aboutPage.subtitle}
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
                 15 yılı aşkın deneyimimizle Adalar bölgesinde gayrimenkul sektöründe 
@@ -33,7 +36,7 @@ const AboutSummary: React.FC = () => {
                   <Target className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Misyonumuz</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{t.aboutPage.mission}</h3>
                   <p className="text-gray-600">
                     Müşterilerimizin emlak yatırımlarında en doğru kararları vermelerini sağlamak.
                   </p>
@@ -45,7 +48,7 @@ const AboutSummary: React.FC = () => {
                   <Eye className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Vizyonumuz</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{t.aboutPage.vision}</h3>
                   <p className="text-gray-600">
                     Adalar bölgesinde gayrimenkul sektörünün lider firması olmak.
                   </p>
@@ -58,7 +61,7 @@ const AboutSummary: React.FC = () => {
                 href="/biz-kimiz"
                 className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
               >
-                Daha Fazla Bilgi
+                {t.buttons.more}
               </a>
             </div>
           </div>

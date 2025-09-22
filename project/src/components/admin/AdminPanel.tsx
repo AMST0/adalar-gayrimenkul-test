@@ -28,6 +28,7 @@ import { dbHelpers } from '../../utils/supabaseClient-new';
 
 import { useEffect } from 'react';
 import { STORAGE_KEYS, getStorageItem } from '../../utils/storage';
+import { getAllProvinces, getDistrictsByProvince, getNeighborhoodsByDistrict } from '../../data/turkeyData';
 
 const AdminPanel: React.FC = () => {
   const { logout } = useAdmin();
@@ -1239,16 +1240,71 @@ const PropertyForm: React.FC<{
   onSave: (property: Property) => void;
   onCancel: () => void;
 }> = ({ property, onSave, onCancel }) => {
+  const { agents } = useData();
+  const [availableDistricts, setAvailableDistricts] = useState<{code: string, name: string}[]>([]);
+  const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     title: property.title || '',
     location: property.location || '',
     size: property.size || 0,
     price: property.price || 0,
-    image: property.image || '',
+    image: property.image || 'https://i.hizliresim.com/rs5qoel.png',
     description: property.description || '',
     isActive: property.isActive ?? true,
     isFeatured: property.isFeatured ?? false,
+    // Yeni arsa alanları
+    il: property.il || '',
+    ilce: property.ilce || '',
+    mahalle: property.mahalle || '',
+    mahalleNo: property.mahalleNo || '',
+    ada: property.ada || '',
+    parsel: property.parsel || '',
+    tapuAlani: property.tapuAlani || 0,
+    nitelik: property.nitelik || '',
+    mevkii: property.mevkii || '',
+    zeminTipi: property.zeminTipi || '',
+    pafta: property.pafta || '',
+    danismanId: property.danismanId || '',
+    images: property.images || [],
   });
+
+  // İl değiştiğinde ilçeleri güncelle
+  useEffect(() => {
+    if (formData.il) {
+      const districts = getDistrictsByProvince(formData.il);
+      setAvailableDistricts(districts);
+      // İl değiştiğinde ilçe ve mahalle temizle
+      if (formData.ilce) {
+        setFormData(prev => ({ ...prev, ilce: '', mahalle: '' }));
+      }
+    } else {
+      setAvailableDistricts([]);
+      setAvailableNeighborhoods([]);
+    }
+  }, [formData.il]);
+
+  // İlçe değiştiğinde mahalleleri güncelle
+  useEffect(() => {
+    if (formData.ilce) {
+      const neighborhoods = getNeighborhoodsByDistrict(formData.ilce);
+      setAvailableNeighborhoods(neighborhoods);
+      // İlçe değiştiğinde mahalle temizle
+      if (formData.mahalle) {
+        setFormData(prev => ({ ...prev, mahalle: '' }));
+      }
+    } else {
+      setAvailableNeighborhoods([]);
+    }
+  }, [formData.ilce]);
+
+  const handleFileUpload = (files: FileList | null) => {
+    if (files) {
+      const fileArray = Array.from(files);
+      setSelectedFiles(fileArray);
+      // Burada dosyaları upload edecek fonksiyon eklenebilir
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1260,7 +1316,7 @@ const PropertyForm: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold">
             {property.id ? 'Arsa Düzenle' : 'Yeni Arsa'}
@@ -1271,51 +1327,282 @@ const PropertyForm: React.FC<{
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Arsa Başlığı"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Konum"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="number"
-            placeholder="Büyüklük (m²)"
-            value={formData.size}
-            onChange={(e) => setFormData({ ...formData, size: parseInt(e.target.value) })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="number"
-            placeholder="Fiyat (TL)"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="url"
-            placeholder="Fotoğraf URL"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
+          {/* Temel Bilgiler */}
+          <div className="border-b pb-4">
+            <h4 className="font-semibold mb-3 text-gray-700">Temel Bilgiler</h4>
+            <input
+              type="text"
+              placeholder="Arsa Başlığı"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Konum"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+              required
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                placeholder="Büyüklük (m²)"
+                value={formData.size}
+                onChange={(e) => setFormData({ ...formData, size: parseInt(e.target.value) })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Fiyat (TL)"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Konum Detayları */}
+          <div className="border-b pb-4">
+            <h4 className="font-semibold mb-3 text-gray-700">Konum Detayları</h4>
+            <div className="grid grid-cols-2 gap-3">
+              {/* İl Seçimi */}
+              <select
+                value={formData.il}
+                onChange={(e) => setFormData({ ...formData, il: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              >
+                <option value="">İl Seçiniz</option>
+                {getAllProvinces().map(province => (
+                  <option key={province.code} value={province.code}>
+                    {province.name}
+                  </option>
+                ))}
+              </select>
+              
+              {/* İlçe Seçimi */}
+              <select
+                value={formData.ilce}
+                onChange={(e) => setFormData({ ...formData, ilce: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                disabled={!formData.il}
+                required
+              >
+                <option value="">İlçe Seçiniz</option>
+                {availableDistricts.map(district => (
+                  <option key={district.code} value={district.code}>
+                    {district.name}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Mahalle Seçimi */}
+              {availableNeighborhoods.length > 0 ? (
+                <select
+                  value={formData.mahalle}
+                  onChange={(e) => setFormData({ ...formData, mahalle: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Mahalle Seçiniz (İsteğe Bağlı)</option>
+                  {availableNeighborhoods.map(neighborhood => (
+                    <option key={neighborhood} value={neighborhood}>
+                      {neighborhood}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Mahalle/Köy (İsteğe Bağlı)"
+                  value={formData.mahalle}
+                  onChange={(e) => setFormData({ ...formData, mahalle: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              )}
+              
+              <input
+                type="text"
+                placeholder="Mahalle No"
+                value={formData.mahalleNo}
+                onChange={(e) => setFormData({ ...formData, mahalleNo: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Mevkii"
+              value={formData.mevkii}
+              onChange={(e) => setFormData({ ...formData, mevkii: e.target.value })}
+              className="w-full p-3 border border-gray-300 rounded-lg mt-3"
+            />
+          </div>
+
+          {/* Tapu Bilgileri */}
+          <div className="border-b pb-4">
+            <h4 className="font-semibold mb-3 text-gray-700">Tapu Bilgileri <span className="text-red-500">*</span></h4>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Ada *"
+                value={formData.ada}
+                onChange={(e) => setFormData({ ...formData, ada: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Parsel *"
+                value={formData.parsel}
+                onChange={(e) => setFormData({ ...formData, parsel: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Tapu Alanı (m²) *"
+                value={formData.tapuAlani}
+                onChange={(e) => setFormData({ ...formData, tapuAlani: parseInt(e.target.value) })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+                min="1"
+              />
+              <input
+                type="text"
+                placeholder="Pafta *"
+                value={formData.pafta}
+                onChange={(e) => setFormData({ ...formData, pafta: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Özellikler */}
+          <div className="border-b pb-4">
+            <h4 className="font-semibold mb-3 text-gray-700">Özellikler</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Nitelik"
+                value={formData.nitelik}
+                onChange={(e) => setFormData({ ...formData, nitelik: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+              <input
+                type="text"
+                placeholder="Zemin Tipi"
+                value={formData.zeminTipi}
+                onChange={(e) => setFormData({ ...formData, zeminTipi: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <select
+              value={formData.danismanId}
+              onChange={(e) => setFormData({ ...formData, danismanId: e.target.value })}
+              className="w-full p-3 border border-gray-300 rounded-lg mt-3"
+            >
+              <option value="">Danışman Seçiniz</option>
+              {agents.filter(agent => agent.isActive).map(agent => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name} - {agent.title} ({agent.experience})
+                </option>
+              ))}
+            </select>
+            
+            {/* Seçilen Danışman Bilgileri */}
+            {formData.danismanId && (() => {
+              const selectedAgent = agents.find(agent => agent.id === formData.danismanId);
+              return selectedAgent ? (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h5 className="font-semibold text-blue-900 mb-3">Seçilen Danışman</h5>
+                  <div className="flex items-center space-x-3">
+                    <img 
+                      src={selectedAgent.image} 
+                      alt={selectedAgent.name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-blue-200"
+                    />
+                    <div className="flex-1">
+                      <div className="font-bold text-blue-900">{selectedAgent.name}</div>
+                      <div className="text-blue-700 text-sm">{selectedAgent.title}</div>
+                      <div className="text-blue-600 text-xs">{selectedAgent.experience}</div>
+                    </div>
+                    <div className="text-right text-sm">
+                      <div className="text-blue-700">📞 {selectedAgent.phone}</div>
+                      <div className="text-blue-600">✉️ {selectedAgent.email}</div>
+                    </div>
+                  </div>
+                  {selectedAgent.specialties && selectedAgent.specialties.length > 0 && (
+                    <div className="mt-3">
+                      <div className="text-xs text-blue-700 mb-1">Uzmanlık Alanları:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedAgent.specialties.map((specialty, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : null;
+            })()}
+          </div>
+
+          {/* Görseller */}
+          <div className="border-b pb-4">
+            <h4 className="font-semibold mb-3 text-gray-700">Görseller</h4>
+            <input
+              type="url"
+              placeholder="Ana Fotoğraf URL (İsteğe Bağlı - Boş bırakılırsa varsayılan görsel kullanılır)"
+              value={formData.image === 'https://i.hizliresim.com/rs5qoel.png' ? '' : formData.image}
+              onChange={(e) => setFormData({ ...formData, image: e.target.value || 'https://i.hizliresim.com/rs5qoel.png' })}
+              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+            />
+            <div className="bg-gray-50 p-3 rounded-lg mb-3">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Varsayılan Görsel:</strong> {formData.image}
+              </p>
+              <img 
+                src={formData.image} 
+                alt="Önizleme" 
+                className="w-32 h-20 object-cover rounded border"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://i.hizliresim.com/rs5qoel.png';
+                }}
+              />
+            </div>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+              onChange={(e) => handleFileUpload(e.target.files)}
+            />
+            {selectedFiles.length > 0 && (
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-sm text-green-700 mb-2">Seçilen dosyalar:</p>
+                <ul className="text-sm text-green-600">
+                  {selectedFiles.map((file, index) => (
+                    <li key={index}>• {file.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="text-sm text-gray-500">
+              Birden fazla görsel seçebilirsiniz. Görseller yüklendikten sonra galeri oluşturulacak.
+            </p>
+          </div>
+
           <textarea
             placeholder="Açıklama"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={3}
+            rows={4}
             className="w-full p-3 border border-gray-300 rounded-lg"
             required
           />

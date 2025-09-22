@@ -22,6 +22,20 @@ export interface Property {
   description: string;
   isActive: boolean;
   isFeatured: boolean;
+  // Arsa için detaylı bilgiler
+  il?: string;
+  ilce?: string;
+  mahalle?: string;
+  mahalleNo?: string;
+  ada?: string;
+  parsel?: string;
+  tapuAlani?: number;
+  nitelik?: string;
+  mevkii?: string;
+  zeminTipi?: string;
+  pafta?: string;
+  danismanId?: string;
+  images?: string[]; // Multiple images
 }
 
 export interface Project {

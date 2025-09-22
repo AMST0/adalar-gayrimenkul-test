@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, X, Globe } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const Header: React.FC = () => {
+  const { language, setLanguage, t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -45,51 +48,76 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 bg-black">
-            <a
-              href="/"
+            <Link
+              to="/"
               className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
-              Ana Sayfa
+              {t.home}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="/biz-kimiz"
+            </Link>
+            <Link
+              to="/biz-kimiz"
               className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
-              Biz Kimiz
+              {t.about}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="/danismanlar"
+            </Link>
+            <Link
+              to="/danismanlar"
               className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
-              Danışmanlar
+              {t.agents}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="/arsalar"
+            </Link>
+            <Link
+              to="/arsalar"
               className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
-              Arsalar
+              {t.properties}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
-            </a>
-            <a
-              href="/iletisim"
+            </Link>
+            <Link
+              to="/iletisim"
               className="text-white hover:text-red-600 transition-colors duration-300 font-semibold relative group"
             >
-              İletişim
+              {t.contact}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
-            </a>
+            </Link>
           </nav>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <a
-              href="/iletisim"
+          {/* Language Switcher & CTA Button */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Language Switcher */}
+            <div className="flex items-center space-x-2 bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setLanguage('tr')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-all duration-200 ${
+                  language === 'tr'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+              >
+                TR
+              </button>
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-all duration-200 ${
+                  language === 'en'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+              >
+                EN
+              </button>
+            </div>
+            
+            {/* CTA Button */}
+            <Link
+              to="/iletisim"
               className="bg-gradient-to-r from-red-500 to-yellow-600 text-white px-6 py-3 rounded-xl font-bold hover:from-yellow-600 hover:to-yellow-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              İletişime Geç
-            </a>
+              {t.buttons.contact}
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -109,48 +137,73 @@ const Header: React.FC = () => {
         }`}
       >
         <nav className="px-4 py-6 bg-black border-t">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
-            Ana Sayfa
-          </a>
-          <a
-            href="/biz-kimiz"
+            {t.home}
+          </Link>
+          <Link
+            to="/biz-kimiz"
             className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
-            Biz Kimiz
-          </a>
-          <a
-            href="/danismanlar"
+            {t.about}
+          </Link>
+          <Link
+            to="/danismanlar"
             className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
-            Danışmanlar
-          </a>
-          <a
-            href="/arsalar"
+            {t.agents}
+          </Link>
+          <Link
+            to="/arsalar"
             className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
-            Arsalar
-          </a>
-          <a
-            href="/iletisim"
+            {t.properties}
+          </Link>
+          <Link
+            to="/iletisim"
             className="block py-3 text-white hover:text-red-600 transition-colors duration-300 font-semibold"
             onClick={() => setIsMenuOpen(false)}
           >
-            İletişim
-          </a>
-          <a
-            href="/iletisim"
+            {t.contact}
+          </Link>
+          
+          {/* Mobile Language Switcher */}
+          <div className="flex items-center justify-center space-x-2 bg-gray-800 rounded-lg p-1 my-4">
+            <button
+              onClick={() => setLanguage('tr')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-all duration-200 ${
+                language === 'tr'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              TR
+            </button>
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-all duration-200 ${
+                language === 'en'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              EN
+            </button>
+          </div>
+          
+          <Link
+            to="/iletisim"
             className="block mt-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-xl text-center font-bold hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 shadow-lg"
             onClick={() => setIsMenuOpen(false)}
           >
-            İletişime Geç
-          </a>
+            {t.buttons.contact}
+          </Link>
         </nav>
       </div>
     </header>

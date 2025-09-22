@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Send, MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import Button from '../common/Button';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ContactForm: React.FC = () => {
   const { addContactRequest } = useData();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -40,7 +42,7 @@ const ContactForm: React.FC = () => {
     setFormData({ name: '', email: '', phone: '', message: '' });
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Telefon Numaranız *
+                  {t.contactPage.form.phoneRequired}
                 </label>
                 <input
                   type="tel"
@@ -50,7 +52,7 @@ const ContactForm: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                  placeholder="Telefon numaranızı girin"
+                  placeholder={t.contactPage.form.phonePlaceholder}
                 />
               </div>
     setIsSubmitted(true);
@@ -65,7 +67,7 @@ const ContactForm: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
-            İletişime Geçin
+            {t.contactPage.title}
           </h2>
           <p className="text-gray-600 text-lg">
             Size en uygun arsayı bulma konusunda yardımcı olmak için buradayız
@@ -75,18 +77,18 @@ const ContactForm: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h3 className="text-2xl font-bold text-blue-900 mb-6">Mesaj Gönderin</h3>
+                          <h3 className="text-2xl font-bold text-blue-900 mb-6">{t.common.contactInfo}</h3>
             
             {isSubmitted && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-                Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.
+                {t.contactPage.form.successMessage}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Adınız Soyadınız *
+                  {t.contactPage.form.name} *
                 </label>
                 <input
                   type="text"
@@ -96,13 +98,13 @@ const ContactForm: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                  placeholder="Adınızı ve soyadınızı girin"
+                  placeholder={t.contactPage.form.namePlaceholder}
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  E-posta Adresiniz *
+                  {t.contactPage.email} *
                 </label>
                 <input
                   type="email"
@@ -112,14 +114,14 @@ const ContactForm: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                  placeholder="E-posta adresinizi girin"
+                  placeholder={t.contactPage.form.emailPlaceholder}
                 />
               </div>
 
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Telefon Numaranız *
+                  {t.contactPage.form.phoneRequired}
                 </label>
                 <input
                   type="tel"
@@ -129,13 +131,13 @@ const ContactForm: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                  placeholder="Telefon numaranızı girin"
+                  placeholder={t.contactPage.form.phonePlaceholder}
                 />
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Mesajınız *
+                  {t.contactPage.form.messageRequired}
                 </label>
                 <textarea
                   id="message"
@@ -145,7 +147,7 @@ const ContactForm: React.FC = () => {
                   required
                   rows={5}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
-                  placeholder="Nasıl yardımcı olabiliriz?"
+                  placeholder={t.contactPage.form.messagePlaceholder}
                 />
               </div>
 
@@ -159,7 +161,7 @@ const ContactForm: React.FC = () => {
                 ) : (
                   <>
                     <Send className="w-5 h-5" />
-                    <span>Mesaj Gönder</span>
+                    <span>{t.contactPage.form.sendMessage}</span>
                   </>
                 )}
               </Button>
@@ -169,7 +171,7 @@ const ContactForm: React.FC = () => {
           {/* Contact Info & Map */}
           <div className="space-y-8">
             <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6">İletişim Bilgileri</h3>
+              <h3 className="text-2xl font-bold text-blue-900 mb-6">{t.common.contactInfo}</h3>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -190,7 +192,7 @@ const ContactForm: React.FC = () => {
                     <Phone className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-blue-900 mb-1">Telefon</h4>
+                    <h4 className="font-semibold text-blue-900 mb-1">{t.contactPage.phone}</h4>
                     <p className="text-gray-600">+90 216 382 1234</p>
                     <p className="text-gray-600">+90 555 123 4567</p>
                   </div>
@@ -201,7 +203,7 @@ const ContactForm: React.FC = () => {
                     <Mail className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-blue-900 mb-1">E-posta</h4>
+                    <h4 className="font-semibold text-blue-900 mb-1">{t.contactPage.email}</h4>
                     <p className="text-gray-600">info@adalargayrimenkul.com</p>
                   </div>
                 </div>

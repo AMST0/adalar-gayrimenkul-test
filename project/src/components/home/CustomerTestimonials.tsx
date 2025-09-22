@@ -20,9 +20,11 @@ import { Star } from 'lucide-react';
 import { Quote } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { dbHelpers } from '../../utils/supabaseClient-new';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const CustomerTestimonials: React.FC = () => {
   const { testimonials } = useData();
+  const { t } = useLanguage();
   // Baloncuk görünürlüğü ve animasyon için state
   const [showBubble, setShowBubble] = useState(false);
   const bubbleTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -319,7 +321,7 @@ const CustomerTestimonials: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Müşteri Yorumları
+            {t.common.customerTestimonials}
           </h2>
           <p className="text-blue-200 text-lg">
             Müşterilerimizin memnuniyeti bizim en büyük başarımız
