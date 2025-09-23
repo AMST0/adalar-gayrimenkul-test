@@ -328,20 +328,21 @@ const CustomerTestimonials: React.FC = () => {
           </p>
         </div>
 
-        <div className="relative h-96 md:h-[450px]">
-          {activeTestimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-float"
-              style={{
-                left: `${floatingPositions[index]?.x || 50}%`,
-                top: `${floatingPositions[index]?.y || 50}%`,
-                animationDelay: `${floatingPositions[index]?.delay || 0}s`,
-              }}
-              onMouseEnter={() => handleMouseEnter(testimonial.id)}
-              onMouseLeave={() => handleMouseLeave()}
-              onClick={() => handleMobileClick(testimonial.id)} // Mobilde tıklama için
-            >
+        <div className="relative h-96 md:h-[450px] flex items-center justify-center">
+          <div className="relative w-full max-w-4xl mx-auto h-full">
+            {activeTestimonials.map((testimonial, index) => (
+              <div
+                key={testimonial.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-float"
+                style={{
+                  left: `${floatingPositions[index]?.x || 50}%`,
+                  top: `${floatingPositions[index]?.y || 50}%`,
+                  animationDelay: `${floatingPositions[index]?.delay || 0}s`,
+                }}
+                onMouseEnter={() => handleMouseEnter(testimonial.id)}
+                onMouseLeave={() => handleMouseLeave()}
+                onClick={() => handleMobileClick(testimonial.id)} // Mobilde tıklama için
+              >
               <div
                 id={`testimonial-${testimonial.id}`}
                 className={`bg-white rounded-2xl p-6 shadow-2xl max-w-xs transition-all duration-500 group cursor-pointer ${
@@ -398,6 +399,7 @@ const CustomerTestimonials: React.FC = () => {
               </div>
             </div>
           ))}
+          </div>
         </div>
       </div> {/* max-w-7xl div kapanışı */}
 
