@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const Header: React.FC = () => {
@@ -40,11 +40,11 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
             <div className="w-28  bg-gradient-to-r rounded-xl flex items-center justify-center shadow-lg">
-              <img src="https://i.hizliresim.com/rs5qoel.png" alt="" className="w-full h-full object-contain" />
+              <img src="https://i.hizliresim.com/rs5qoel.png" alt="Adalar Gayrimenkul Logo" className="w-full h-full object-contain" />
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8 bg-black">

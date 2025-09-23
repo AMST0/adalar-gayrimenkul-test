@@ -20,12 +20,8 @@ import {
   ChevronDown,
   Upload,
   Camera,
-  GripVertical,
   ArrowUp,
-  ArrowDown,
-  Check,
-  AlertCircle,
-  Info
+  ArrowDown
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -66,6 +62,24 @@ const AdminPanel: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Slider form state'leri
+  const [sliderFormData, setSliderFormData] = useState({
+    title: '',
+    subtitle: '',
+    location: '',
+    image: 'https://i.hizliresim.com/rs5qoel.png',
+    isActive: true
+  });
+
+  // Slider görsel yükleme state'leri
+  const [sliderUploading, setSliderUploading] = useState(false);
+  const [sliderUploadProgress, setSliderUploadProgress] = useState(0);
+  const [sliderToastMessage, setSliderToastMessage] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+    show: boolean;
+  }>({ type: 'success', message: '', show: false });
+
   // Başarı mesajını göster ve konfeti efekti ile birlikte 3 saniye sonra gizle
   const showSuccessMessage = (message: string) => {
     setSuccessMessage(message);
@@ -74,6 +88,72 @@ const AdminPanel: React.FC = () => {
       setSuccessMessage(null);
       setShowConfetti(false);
     }, 3000);
+  };
+
+  // Slider Toast gösterme fonksiyonu
+  const showSliderToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setSliderToastMessage({ type, message, show: true });
+    setTimeout(() => {
+      setSliderToastMessage(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  // EditingItem değiştiğinde slider form data'sını güncelle
+  useEffect(() => {
+    if (activeTab === 'slider' && editingItem) {
+      setSliderFormData({
+        title: editingItem.title || '',
+        subtitle: editingItem.subtitle || '',
+        location: editingItem.location || '',
+        image: editingItem.image || 'https://i.hizliresim.com/rs5qoel.png',
+        isActive: editingItem.isActive ?? true
+      });
+    } else if (activeTab === 'slider' && !editingItem) {
+      // Yeni slider eklerken form'u temizle
+      setSliderFormData({
+        title: '',
+        subtitle: '',
+        location: '',
+        image: 'https://i.hizliresim.com/rs5qoel.png',
+        isActive: true
+      });
+    }
+  }, [editingItem, activeTab]);
+
+  // Slider dosya yükleme fonksiyonu
+  const handleSliderFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setSliderUploading(true);
+    setSliderUploadProgress(0);
+
+    try {
+      const file = files[0]; // Sadece tek resim al
+      showSliderToast('info', 'Slider görseli yükleniyor...');
+      
+      // Storage helper kullanarak yükle
+      const result = await storageHelpers.uploadImage(file, 'property-images');
+      
+      if (!result.success) {
+        console.error('Dosya yükleme hatası:', result.error);
+        showSliderToast('error', `Görsel yüklenemedi: ${result.error}`);
+        return;
+      }
+
+      if (result.url) {
+        setSliderFormData(prev => ({
+          ...prev,
+          image: result.url || ''
+        }));
+        showSliderToast('success', '🎉 Slider görseli başarıyla yüklendi!');
+      }
+    } catch (error) {
+      console.error('Yükleme hatası:', error);
+      showSliderToast('error', 'Görsel yükleme sırasında beklenmeyen bir hata oluştu');
+    } finally {
+      setSliderUploading(false);
+      setSliderUploadProgress(0);
+    }
   };
 
   // İletişim taleplerini otomatik güncelle
@@ -655,14 +735,13 @@ const AdminPanel: React.FC = () => {
   const renderSliderForm = () => {
     const handleSliderSave = async (e: React.FormEvent) => {
       e.preventDefault();
-      const formData = new FormData(e.target as HTMLFormElement);
       
       const sliderData = {
-        title: formData.get('title') as string,
-        subtitle: formData.get('subtitle') as string,
-        location: formData.get('location') as string,
-        image: formData.get('image') as string,
-        isActive: formData.get('isActive') === 'on'
+        title: sliderFormData.title,
+        subtitle: sliderFormData.subtitle,
+        location: sliderFormData.location,
+        image: sliderFormData.image,
+        isActive: sliderFormData.isActive
       };
 
       if (editingItem && editingItem.id) {
@@ -671,9 +750,11 @@ const AdminPanel: React.FC = () => {
           item.id === editingItem.id ? { ...sliderData, id: editingItem.id } : item
         );
         updateSliderItems(updated);
+        showSuccessMessage('✅ Slide başarıyla güncellendi!');
       } else {
         // Add new slider
         await addSliderItem(sliderData);
+        showSuccessMessage('✅ Yeni slide başarıyla eklendi!');
       }
       
       setShowForm(false);
@@ -682,86 +763,234 @@ const AdminPanel: React.FC = () => {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">
-            {editingItem?.id ? 'Slide Düzenle' : 'Yeni Slide Ekle'}
-          </h3>
+        <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold">
+              {editingItem?.id ? 'Slide Düzenle' : 'Yeni Slide Ekle'}
+            </h3>
+            <button onClick={() => { setShowForm(false); setEditingItem(null); }}>
+              <X className="w-6 h-6" />
+            </button>
+          </div>
           
-          <form onSubmit={handleSliderSave} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Başlık</label>
-              <input
-                type="text"
-                name="title"
-                defaultValue={editingItem?.title || ''}
-                required
-                className="w-full p-2 border rounded"
-                placeholder="ADALAR GAYRİMENKUL"
-              />
+          <form onSubmit={handleSliderSave} className="space-y-6">
+            {/* Temel Bilgiler Bölümü */}
+            <div className="border-b pb-6">
+              <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+                <Building className="w-5 h-5 mr-2" />
+                Temel Bilgiler
+              </h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Başlık</label>
+                  <input
+                    type="text"
+                    value={sliderFormData.title}
+                    onChange={(e) => setSliderFormData({...sliderFormData, title: e.target.value})}
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="ADALAR GAYRİMENKUL"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Lokasyon</label>
+                  <input
+                    type="text"
+                    value={sliderFormData.location}
+                    onChange={(e) => setSliderFormData({...sliderFormData, location: e.target.value})}
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="NİDAPARK"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Alt Başlık</label>
+                <input
+                  type="text"
+                  value={sliderFormData.subtitle}
+                  onChange={(e) => setSliderFormData({...sliderFormData, subtitle: e.target.value})}
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Geleceğin değerli toprakları"
+                />
+              </div>
+            </div>
+
+            {/* Görsel Bölümü */}
+            <div className="border-b pb-6">
+              <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+                <Image className="w-5 h-5 mr-2" />
+                Slider Görseli
+              </h4>
+              
+              {/* Resmi görsel uyarısı */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Önemli:</strong> Yüksek kaliteli ve etkileyici bir görsel kullanınız. 
+                      Slider ana sayfada ilk görülen öğedir.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Mevcut görsel önizlemesi */}
+              {sliderFormData.image && sliderFormData.image !== 'https://i.hizliresim.com/rs5qoel.png' && (
+                <div className="relative inline-block mb-4">
+                  <img 
+                    src={sliderFormData.image} 
+                    alt="Slider görseli" 
+                    className="w-32 h-20 object-cover border-2 border-gray-200 rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSliderFormData({ ...sliderFormData, image: 'https://i.hizliresim.com/rs5qoel.png' })}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+
+              {/* Default görsel gösterimi */}
+              {sliderFormData.image === 'https://i.hizliresim.com/rs5qoel.png' && (
+                <div className="relative inline-block mb-4">
+                  <img 
+                    src={sliderFormData.image} 
+                    alt="Varsayılan görsel" 
+                    className="w-32 h-20 object-cover border-2 border-gray-300 opacity-60 rounded-lg"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">Varsayılan</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Dosya yükleme butonları */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                {/* Dosya seçici */}
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSliderFileUpload(e.target.files)}
+                    className="hidden"
+                    disabled={sliderUploading}
+                  />
+                  <div className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <Upload className="w-5 h-5 mr-2 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      {sliderUploading ? 'Yükleniyor...' : 'Dosya Seç'}
+                    </span>
+                  </div>
+                </label>
+
+                {/* Kamera (mobil cihazlarda) */}
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => handleSliderFileUpload(e.target.files)}
+                    className="hidden"
+                    disabled={sliderUploading}
+                  />
+                  <div className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+                    <Camera className="w-5 h-5 mr-2 text-gray-500" />
+                    <span className="text-sm text-gray-600">
+                      {sliderUploading ? 'Yükleniyor...' : 'Fotoğraf Çek'}
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* URL ile ekleme seçeneği */}
+              <details className="group">
+                <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                  <span>URL ile görsel ekle</span>
+                  <ChevronDown className="w-4 h-4 ml-1 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="mt-2">
+                  <input
+                    type="url"
+                    placeholder="Görsel URL'si"
+                    value={sliderFormData.image}
+                    onChange={(e) => setSliderFormData({ ...sliderFormData, image: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </details>
+
+              {/* Yükleme progress bar */}
+              {sliderUploading && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${sliderUploadProgress}%` }}
+                  ></div>
+                </div>
+              )}
+            </div>
+
+            {/* Ayarlar Bölümü */}
+            <div className="pb-6">
+              <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+                <Settings className="w-5 h-5 mr-2" />
+                Ayarlar
+              </h4>
+              
+              <label className="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer w-fit">
+                <input
+                  type="checkbox"
+                  checked={sliderFormData.isActive}
+                  onChange={(e) => setSliderFormData({ ...sliderFormData, isActive: e.target.checked })}
+                  className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <div>
+                  <div className="font-medium text-gray-700">Aktif</div>
+                  <div className="text-sm text-gray-500">Slide ana sayfada görünür</div>
+                </div>
+              </label>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium mb-1">Alt Başlık</label>
-              <input
-                type="text"
-                name="subtitle"
-                defaultValue={editingItem?.subtitle || ''}
-                required
-                className="w-full p-2 border rounded"
-                placeholder="Geleceğin değerli toprakları"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Lokasyon</label>
-              <input
-                type="text"
-                name="location"
-                defaultValue={editingItem?.location || ''}
-                required
-                className="w-full p-2 border rounded"
-                placeholder="NİDAPARK"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Görsel URL</label>
-              <input
-                type="url"
-                name="image"
-                defaultValue={editingItem?.image || 'https://i.hizliresim.com/rs5qoel.png'}
-                required
-                className="w-full p-2 border rounded"
-                placeholder="https://i.hizliresim.com/rs5qoel.png"
-              />
-            </div>
-            
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="isActive"
-                defaultChecked={editingItem?.isActive || false}
-                className="mr-2"
-              />
-              <label className="text-sm font-medium">Aktif</label>
-            </div>
-            
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="submit"
-                className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-              >
-                Kaydet
-              </button>
-              <button
+            {/* Butonlar */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+              <Button type="submit" className="flex-1 py-3" disabled={sliderUploading}>
+                <Save className="w-4 h-4 mr-2" />
+                {sliderUploading ? 'Yükleniyor...' : 'Kaydet'}
+              </Button>
+              <Button 
+                variant="outline" 
                 type="button"
-                onClick={() => { setShowForm(false); setEditingItem(null); }}
-                className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+                onClick={() => { setShowForm(false); setEditingItem(null); }} 
+                className="flex-1 py-3" 
+                disabled={sliderUploading}
               >
+                <X className="w-4 h-4 mr-2" />
                 İptal
-              </button>
+              </Button>
             </div>
           </form>
+
+          {/* Toast Mesajı */}
+          {sliderToastMessage.show && (
+            <Toast
+              type={sliderToastMessage.type}
+              message={sliderToastMessage.message}
+              show={sliderToastMessage.show}
+              onClose={() => setSliderToastMessage(prev => ({ ...prev, show: false }))}
+            />
+          )}
         </div>
       </div>
     );
@@ -1139,7 +1368,7 @@ const AgentForm: React.FC<{
   const [formData, setFormData] = useState({
     name: agent.name || '',
     title: agent.title || '',
-    image: agent.image || '',
+    image: agent.image || 'https://i.hizliresim.com/rs5qoel.png',
     phone: agent.phone || '',
     email: agent.email || '',
     experience: agent.experience || '',
@@ -1148,6 +1377,59 @@ const AgentForm: React.FC<{
     isFeatured: agent.isFeatured ?? false,
     portfolioUrl: agent.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/',
   });
+
+  // Görsel yükleme state'leri
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [toastMessage, setToastMessage] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+    show: boolean;
+  }>({ type: 'success', message: '', show: false });
+
+  // Toast gösterme fonksiyonu
+  const showToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setToastMessage({ type, message, show: true });
+    setTimeout(() => {
+      setToastMessage(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  // Dosya yükleme fonksiyonu
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const file = files[0]; // Sadece tek resim al
+      showToast('info', 'Fotoğraf yükleniyor...');
+      
+      // Storage helper kullanarak yükle
+      const result = await storageHelpers.uploadImage(file, 'property-images');
+      
+      if (!result.success) {
+        console.error('Dosya yükleme hatası:', result.error);
+        showToast('error', `Fotoğraf yüklenemedi: ${result.error}`);
+        return;
+      }
+
+      if (result.url) {
+        setFormData(prev => ({
+          ...prev,
+          image: result.url || ''
+        }));
+        showToast('success', '🎉 Fotoğraf başarıyla yüklendi!');
+      }
+    } catch (error) {
+      console.error('Yükleme hatası:', error);
+      showToast('error', 'Fotoğraf yükleme sırasında beklenmeyen bir hata oluştu');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1161,7 +1443,7 @@ const AgentForm: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold">
             {agent.id ? 'Danışman Düzenle' : 'Yeni Danışman'}
@@ -1171,102 +1453,284 @@ const AgentForm: React.FC<{
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Ad Soyad"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Ünvan"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="url"
-            placeholder="Fotoğraf URL"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="tel"
-            placeholder="Telefon"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="email"
-            placeholder="E-posta"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Deneyim (örn: 5 yıl)"
-            value={formData.experience}
-            onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Uzmanlık alanları (virgülle ayırın)"
-            value={formData.specialties}
-            onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            required
-          />
-          <input
-            type="url"
-            placeholder="Sahibinden Portföy Linki (opsiyonel)"
-            value={formData.portfolioUrl}
-            onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-          
-          <div className="space-y-2">
-            <label className="flex items-center">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Temel Bilgiler Bölümü */}
+          <div className="border-b pb-6">
+            <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+              <Users className="w-5 h-5 mr-2" />
+              Temel Bilgiler
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="mr-2"
+                type="text"
+                placeholder="Ad Soyad"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
               />
-              Aktif
-            </label>
-            <label className="flex items-center">
               <input
-                type="checkbox"
-                checked={formData.isFeatured}
-                onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                className="mr-2"
+                type="text"
+                placeholder="Ünvan"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
               />
-              Öne Çıkan
-            </label>
+            </div>
           </div>
 
-          <div className="flex space-x-4 pt-4">
-            <Button type="submit" className="flex-1">
+          {/* Fotoğraf Bölümü */}
+          <div className="border-b pb-6">
+            <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+              <Camera className="w-5 h-5 mr-2" />
+              Danışman Fotoğrafı
+            </h4>
+            
+            {/* Fotoğraf Yükleme Bölümü */}
+            <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">
+                Danışman Fotoğrafı
+              </label>
+              <span className="text-xs text-gray-500">(Opsiyonel)</span>
+            </div>
+            
+            {/* Resmi görsel uyarısı */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Önemli:</strong> Profesyonel ve resmi bir görsel kullanınız. 
+                    Danışman fotoğrafı müşterilerimize güven verir.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Mevcut fotoğraf önizlemesi */}
+            {formData.image && formData.image !== 'https://i.hizliresim.com/rs5qoel.png' && (
+              <div className="relative inline-block">
+                <img 
+                  src={formData.image} 
+                  alt="Danışman fotoğrafı" 
+                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, image: 'https://i.hizliresim.com/rs5qoel.png' })}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/* Default fotoğraf gösterimi */}
+            {formData.image === 'https://i.hizliresim.com/rs5qoel.png' && (
+              <div className="relative inline-block">
+                <img 
+                  src={formData.image} 
+                  alt="Varsayılan fotoğraf" 
+                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-300 opacity-60"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">Varsayılan</span>
+                </div>
+              </div>
+            )}
+
+            {/* Dosya yükleme butonları */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              {/* Dosya seçici */}
+              <label className="flex-1 cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <div className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                  <Upload className="w-5 h-5 mr-2 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    {uploading ? 'Yükleniyor...' : 'Dosya Seç'}
+                  </span>
+                </div>
+              </label>
+
+              {/* Kamera (mobil cihazlarda) */}
+              <label className="flex-1 cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <div className="flex items-center justify-center p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+                  <Camera className="w-5 h-5 mr-2 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    {uploading ? 'Yükleniyor...' : 'Fotoğraf Çek'}
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* URL ile ekleme seçeneği */}
+            <details className="group">
+              <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 flex items-center">
+                <span>URL ile fotoğraf ekle</span>
+                <ChevronDown className="w-4 h-4 ml-1 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="mt-2">
+                <input
+                  type="url"
+                  placeholder="Fotoğraf URL'si"
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+            </details>
+
+            {/* Yükleme progress bar */}
+            {uploading && (
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+          </div>
+
+          {/* İletişim Bilgileri Bölümü */}
+          <div className="border-b pb-6">
+            <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+              <Phone className="w-5 h-5 mr-2" />
+              İletişim Bilgileri
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="tel"
+                placeholder="Telefon"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
+              />
+              <input
+                type="email"
+                placeholder="E-posta"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Profesyonel Bilgiler Bölümü */}
+          <div className="border-b pb-6">
+            <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+              <Star className="w-5 h-5 mr-2" />
+              Profesyonel Bilgiler
+            </h4>
+            
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Deneyim (örn: 5 yıl)"
+                value={formData.experience}
+                onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Uzmanlık alanları (virgülle ayırın)"
+                value={formData.specialties}
+                onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                required
+              />
+              <input
+                type="url"
+                placeholder="Sahibinden Portföy Linki (opsiyonel)"
+                value={formData.portfolioUrl}
+                onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Ayarlar Bölümü */}
+          <div className="pb-6">
+            <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
+              <Settings className="w-5 h-5 mr-2" />
+              Ayarlar
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <label className="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <div>
+                  <div className="font-medium text-gray-700">Aktif</div>
+                  <div className="text-sm text-gray-500">Danışman web sitesinde görünür</div>
+                </div>
+              </label>
+              
+              <label className="flex items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                  className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <div>
+                  <div className="font-medium text-gray-700">Öne Çıkan</div>
+                  <div className="text-sm text-gray-500">Ana sayfada öne çıkarılır</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+            <Button type="submit" className="flex-1 py-3" disabled={uploading}>
               <Save className="w-4 h-4 mr-2" />
-              Kaydet
+              {uploading ? 'Yükleniyor...' : 'Kaydet'}
             </Button>
-            <Button variant="outline" onClick={onCancel} className="flex-1">
+            <Button variant="outline" onClick={onCancel} className="flex-1 py-3" disabled={uploading}>
+              <X className="w-4 h-4 mr-2" />
               İptal
             </Button>
           </div>
         </form>
+
+        {/* Toast Mesajı */}
+        {toastMessage.show && (
+          <Toast
+            type={toastMessage.type}
+            message={toastMessage.message}
+            show={toastMessage.show}
+            onClose={() => setToastMessage(prev => ({ ...prev, show: false }))}
+          />
+        )}
       </div>
     </div>
   );
@@ -1282,7 +1746,6 @@ const PropertyForm: React.FC<{
   const [availableDistricts, setAvailableDistricts] = useState<{code: string, name: string}[]>([]);
   const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [toastMessage, setToastMessage] = useState<{
@@ -1391,7 +1854,6 @@ const PropertyForm: React.FC<{
       }
 
       // Yüklenen resimleri form datasına ekle
-      setUploadedImages(prev => [...prev, ...uploadedUrls]);
       setFormData(prev => ({
         ...prev,
         images: [...prev.images, ...uploadedUrls],
