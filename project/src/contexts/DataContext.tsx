@@ -11,6 +11,7 @@ interface DataContextType {
   testimonials: Testimonial[];
   sliderItems: SliderItem[];
   contactRequests: ContactRequest[];
+  isDataLoading: boolean;
   updateAgents: (agents: Agent[]) => void;
   updateProperties: (properties: Property[]) => void;
   updateProjects: (projects: Project[]) => void;
@@ -34,6 +35,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [sliderItems, setSliderItems] = useState<SliderItem[]>([]);
   const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -225,6 +227,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setTestimonials(loadedTestimonials);
         setSliderItems(loadedSliderItems);
         setContactRequests(loadedContactRequests);
+      } finally {
+        setIsDataLoading(false);
       }
     };
 
@@ -495,6 +499,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         testimonials,
         sliderItems,
         contactRequests,
+        isDataLoading,
         updateAgents,
         updateProperties,
         updateProjects,
