@@ -51,23 +51,45 @@ const ProjectLogos: React.FC = () => {
     setTimeout(() => setIsPaused(false), 1500);
   };
 
+  // Otomatik akış (iOS uyumluluğu için hem rAF hem interval fallback)
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || isPaused) return;
+    if (!container) return;
 
-    let reqId: number;
-    const speed = 0.6; // px per frame, daha yavaş ve akıcı
+    // İçerik kısa ise kaydırma gereksiz
+    if (container.scrollWidth <= container.clientWidth) return;
+    if (isPaused) return;
 
-    const animate = () => {
+    let frameId: number | null = null;
+    let intervalId: any = null;
+    const speed = 0.6; // px per frame
+
+    const step = () => {
+      if (!container) return;
       if (container.scrollLeft >= container.scrollWidth / 2) {
-        // Seamless loop için başa dön
-        container.scrollLeft = 0;
+        container.scrollLeft = 0; // loop
       }
       container.scrollLeft += speed;
-      reqId = requestAnimationFrame(animate);
+      frameId = requestAnimationFrame(step);
     };
-    reqId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(reqId);
+
+    // requestAnimationFrame başlat
+    frameId = requestAnimationFrame(step);
+
+    // iOS Safari bazen rAF ile pasif kalabiliyor; düşük frekanslı fallback
+    intervalId = setInterval(() => {
+      if (!container) return;
+      if (isPaused) return;
+      container.scrollLeft += 1.2; // hafif itme
+      if (container.scrollLeft >= container.scrollWidth / 2) {
+        container.scrollLeft = 0;
+      }
+    }, 1200);
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [activeProjects.length, isPaused]);
 
   if (activeProjects.length === 0) return null;
@@ -75,13 +97,21 @@ const ProjectLogos: React.FC = () => {
   // Duplicate projects for seamless scroll
   const duplicatedProjects = [...activeProjects, ...activeProjects];
 
+  // iOS momentum & touch optimizasyonu için inline stil nesnesi
+  const scrollStyles: React.CSSProperties = {
+    scrollBehavior: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    overscrollBehavior: 'contain',
+    maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+  };
+
   return (
     <section className="relative py-4 sm:py-8 bg-gray-50">
       <div className="relative max-w-6xl mx-auto">
         <div
           ref={scrollContainerRef}
-          className="flex space-x-2 sm:space-x-6 overflow-hidden min-w-0 w-full"
-          style={{ scrollBehavior: 'auto', WebkitOverflowScrolling: 'touch' }}
+          className="flex space-x-2 sm:space-x-6 overflow-hidden min-w-0 w-full select-none"
+          style={scrollStyles}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
