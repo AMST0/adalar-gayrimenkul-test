@@ -4,11 +4,17 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 
+// Routes import
+const scrapingRoutes = require('./routes/scrapingRoutes');
+
 const app = express();
 const PORT = 5001;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// Routes
+app.use('/api', scrapingRoutes);
 
 // Okunmamış mesajları tutmak için bellek içi dizi
 let unreadMessages = [];

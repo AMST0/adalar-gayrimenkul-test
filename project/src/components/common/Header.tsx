@@ -111,6 +111,8 @@ const Header: React.FC = () => {
               </button>
             </div>
             
+            {/* Sahibinden.com Button kaldırıldı - floating buton kullanılacak */}
+            
             {/* CTA Button */}
             <Link
               to="/iletisim"
@@ -196,6 +198,8 @@ const Header: React.FC = () => {
               EN
             </button>
           </div>
+          
+          {/* Mobile Sahibinden.com Button kaldırıldı - floating buton kullanılacak */}
           
           <Link
             to="/iletisim"

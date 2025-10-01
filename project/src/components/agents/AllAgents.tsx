@@ -8,7 +8,8 @@ const AllAgents: React.FC = () => {
   const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(0);
   const activeAgents = agents.filter(agent => agent.isActive && !agent.isFeatured);
-  const itemsPerPage = 6;
+  // Kullanıcı isteği: Tek sayfada 12 danışman gösterilsin
+  const itemsPerPage = 12;
   const totalPages = Math.ceil(activeAgents.length / itemsPerPage);
   
   const currentAgents = activeAgents.slice(

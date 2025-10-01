@@ -30,13 +30,29 @@ const Properties: React.FC = () => {
             </p>
           </div>
           
-          {/* Dynamic Location Display */}
-          <div className="mt-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+          {/* Dynamic Location Display & Sahibinden Button */}
+          <div className="mt-12 space-y-4 animate-slide-up" style={{ animationDelay: '0.5s' }}>
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-3 border border-white/20">
               <span className="text-yellow-400 font-bold text-lg mr-2">📍</span>
               <span className="text-white font-semibold">
                 Adalar Gayrimenkul 
               </span>
+            </div>
+            
+            <div className="mt-6">
+              <a
+                href="https://adalargayrimenkul.sahibinden.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center bg-white text-gray-800 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl"
+              >
+                <img 
+                  src="https://s0.shbdn.com/assets/images/sahibindencom-logo-s:6af6f8af6cb352097d43a6709122523d.png" 
+                  alt="Sahibinden.com" 
+                  className="mr-3 h-6 w-auto"
+                />
+                Sahibinden.com'daki Tüm İlanlarımız
+              </a>
             </div>
           </div>
         </div>
@@ -55,7 +71,7 @@ const Properties: React.FC = () => {
 
       <PropertyGrid />
 
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;

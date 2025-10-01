@@ -78,7 +78,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.log('✅ Supabase\'den veriler yüklendi');
           
           // Supabase verilerini TypeScript tiplerle eşle (ID'lere -supabase eki ekle)
-          const mappedAgents = (agentsResult.data || []).map((agent: any) => ({
+          let mappedAgents = (agentsResult.data || []).map((agent: any) => ({
             id: agent.id + '-supabase',
             name: agent.name,
             title: agent.title,
@@ -87,10 +87,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             email: agent.email,
             experience: agent.experience,
             specialties: agent.specialties || ['Gayrimenkul Danışmanlığı'], // Fallback
-            isActive: agent.is_active,
-            isFeatured: agent.is_featured,
+            // Supabase'de null dönebilir; görünmezlik yaşamamak için default değerler
+            isActive: (agent.is_active === null || agent.is_active === undefined) ? true : agent.is_active,
+            isFeatured: (agent.is_featured === null || agent.is_featured === undefined) ? false : agent.is_featured,
             portfolioUrl: agent.portfolio_url || 'https://adalargayrimenkul.sahibinden.com/'
           }));
+
+          // Eğer Supabase'de başka tablolar veri içeriyor ama agents tablosu boşsa önce localStorage / mock fallback kullan
+          if (mappedAgents.length === 0) {
+            const fallbackAgents = getStorageItem(STORAGE_KEYS.AGENTS, mockAgents);
+            if (fallbackAgents && fallbackAgents.length > 0) {
+              console.log('ℹ️ Supabase agents boş, fallback (localStorage/mock) ajanlar kullanılıyor:', fallbackAgents.length);
+              mappedAgents = fallbackAgents.map(a => ({
+                ...a,
+                portfolioUrl: a.portfolioUrl || 'https://adalargayrimenkul.sahibinden.com/'
+              }));
+            } else {
+              console.log('⚠️ Supabase agents boş ve local fallback yok. Agent listesi boş görünecek.');
+            }
+          }
 
           const mappedTestimonials = (testimonialsResult.data || []).map((testimonial: any) => ({
             id: testimonial.id + '-supabase',
@@ -302,26 +317,29 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateSliderItems = async (newSliderItems: SliderItem[]) => {
-    setSliderItems(newSliderItems);
-    setStorageItem(STORAGE_KEYS.SLIDER, newSliderItems);
-    
-    // Supabase'e de kaydet
+    // Yeni sıralamaya göre sort_order değerlerini yeniden ata (0'dan başlayarak)
+    const reindexed = newSliderItems.map((item, idx) => ({ ...item, sort_order: idx } as any));
+    setSliderItems(reindexed);
+    setStorageItem(STORAGE_KEYS.SLIDER, reindexed);
+
+    // Supabase'e de kaydet (her birinin sırasını güncelle)
     try {
-      for (const item of newSliderItems) {
+      for (let i = 0; i < reindexed.length; i++) {
+        const item = reindexed[i] as any;
         if (item.id.includes('-supabase')) {
-          // Mevcut Supabase kaydını güncelle
           await dbHelpers.updateSliderItem(item.id.replace('-supabase', ''), {
             title: item.title,
             subtitle: item.subtitle,
             location: item.location,
             image: item.image,
-            sort_order: parseInt(item.id) || 1,
+            sort_order: i,
             is_active: item.isActive
           });
         }
       }
+      console.log('✅ Slider sıralaması Supabase ile senkronize edildi');
     } catch (error) {
-      console.log('Supabase slider güncelleme hatası:', error);
+      console.log('Supabase slider yeniden sıralama hatası:', error);
     }
   };
 

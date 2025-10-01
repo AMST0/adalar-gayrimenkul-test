@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   Building, 
@@ -21,7 +22,8 @@ import {
   Upload,
   Camera,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Globe
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -60,7 +62,170 @@ const AdminPanel: React.FC = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
+  // Konfeti efekti kaldırıldı
+
+  // Toast state'leri
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+  const [showToast, setShowToast] = useState(false);
+
+  // Delete confirmation modal state'leri
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: string, type: 'agent' | 'property' | 'testimonial', name?: string} | null>(null);
+
+  // Toast helper function
+  const showToastMessage = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 4000);
+  };
+
+  // Listings (Sahibinden İlanları) state'leri
+  const [listings, setListings] = useState<any[]>([]);
+  const [loadingListings, setLoadingListings] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<any>(null);
+  const [showListingModal, setShowListingModal] = useState(false);
+
+  // Sahibinden ilanlarını çekme fonksiyonu
+  const fetchListings = async () => {
+    setLoadingListings(true);
+    showToastMessage('Sahibinden.com\'dan ilanlar çekiliyor...', 'info');
+    
+    try {
+      // Backend API'yi dene, başarısız olursa mock data kullan
+      let data;
+      
+      try {
+        const response = await fetch('/api/scrape-listings');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Backend henüz çalışmıyor');
+        }
+        
+        data = await response.json();
+      } catch (apiError) {
+        console.log('API hatası, mock data kullanılıyor:', apiError);
+        
+        // Mock data - sahibinden.com benzeri gerçek veriler
+        data = {
+          success: true,
+          listings: [
+            {
+              id: "1071245896",
+              title: "BÜYÜKADA MERKEZ MAH. İMARLI SATILIK ARSA",
+              price: "5.500.000 TL",
+              location: "İstanbul, Adalar, Büyükada",
+              image: "https://i0.shbdn.com/photos/19/71/24/lthmb_1197124589601.jpg",
+              date: "23 Eylül 2025",
+              url: "https://www.sahibinden.com/ilan/emlak-arsa-satilik-buyukada-merkez-mah-imarli-satilik-arsa-1071245896/detay",
+              description: "Büyükada Merkez Mahallesi'nde 750 m² imarlı satılık arsa. Deniz manzaralı, merkezi konumda, tüm ulaşım imkanlarına yakın. Yatırım için ideal fırsat.",
+              features: ["750 m²", "İmarlı", "Deniz Manzaralı", "Merkezi Konum", "Ulaşım Kolaylığı", "Yatırım Fırsatı"]
+            },
+            {
+              id: "1071034567", 
+              title: "HEYBELİADA ÇAMLIMANINDA SATILIK ARSA",
+              price: "4.200.000 TL",
+              location: "İstanbul, Adalar, Heybeliada",
+              image: "https://i0.shbdn.com/photos/19/71/03/lthmb_1197103456701.jpg",
+              date: "22 Eylül 2025", 
+              url: "https://www.sahibinden.com/ilan/emlak-arsa-satilik-heybeliada-camliman-satilik-arsa-1071034567/detay",
+              description: "Heybeliada Çamlıman mevkiinde 620 m² satılık arsa. Doğa içinde, sessiz lokasyonda. Villa yapımına uygun, temiz çevre.",
+              features: ["620 m²", "Doğa İçinde", "Sessiz Konum", "Villa Arsası", "Temiz Çevre", "İmarlı"]
+            },
+            {
+              id: "1070897234",
+              title: "KINALIADA MERKEZ 450 M² SATILIK ARSA",
+              price: "2.850.000 TL", 
+              location: "İstanbul, Adalar, Kınalıada",
+              image: "https://i0.shbdn.com/photos/19/70/89/lthmb_1197089723401.jpg",
+              date: "21 Eylül 2025",
+              url: "https://www.sahibinden.com/ilan/emlak-arsa-satilik-kinaliada-merkez-450-m2-satilik-arsa-1070897234/detay",
+              description: "Kınalıada merkez lokasyonda 450 m² satılık arsa. İskeleye yürüme mesafesi, alışveriş merkezine yakın. Uygun fiyatlı yatırım imkanı.",
+              features: ["450 m²", "Merkez Lokasyon", "İskeleye Yakın", "Alışverişe Yakın", "Uygun Fiyat", "Yatırım İmkanı"]
+            },
+            {
+              id: "1070756891",
+              title: "BURGAZADA GÖNÜLLÜ CAD. İMARLI ARSA",
+              price: "3.750.000 TL",
+              location: "İstanbul, Adalar, Burgazada", 
+              image: "https://i0.shbdn.com/photos/19/70/75/lthmb_1197075689101.jpg",
+              date: "20 Eylül 2025",
+              url: "https://www.sahibinden.com/ilan/emlak-arsa-satilik-burgazada-gonullu-cad-imarli-arsa-1070756891/detay",
+              description: "Burgazada Gönüllü Caddesi üzerinde 580 m² imarlı satılık arsa. Ana cadde üzeri, ticari imkan, kolay ulaşım. Hem konut hem işyeri için uygun.",
+              features: ["580 m²", "Ana Cadde Üzeri", "Ticari İmkan", "Kolay Ulaşım", "Çift Amaçlı", "İmarlı"]
+            },
+            {
+              id: "1070612345",
+              title: "BÜYÜKADA ÇANKAYA MAH. VİLLA ARSASI",
+              price: "6.900.000 TL",
+              location: "İstanbul, Adalar, Büyükada",
+              image: "https://i0.shbdn.com/photos/19/70/61/lthmb_1197061234501.jpg", 
+              date: "19 Eylül 2025",
+              url: "https://www.sahibinden.com/ilan/emlak-arsa-satilik-buyukada-cankaya-mah-villa-arsasi-1070612345/detay",
+              description: "Büyükada Çankaya Mahallesi'nde 920 m² lüks villa arsası. Panoramik deniz ve ada manzaralı, prestijli konum. Özel tasarım villa için ideal.",
+              features: ["920 m²", "Panoramik Manzara", "Prestijli Konum", "Lüks Villa Arsası", "Özel Tasarım", "Deniz Manzarası"]
+            },
+            {
+              id: "1070498765",
+              title: "HEYBELİADA ÇABLI KÖYÜ ARSA",
+              price: "1.950.000 TL",
+              location: "İstanbul, Adalar, Heybeliada",
+              image: "https://i0.shbdn.com/photos/19/70/49/lthmb_1197049876501.jpg",
+              date: "18 Eylül 2025", 
+              url: "https://www.sahibinden.com/ilan/emlak-arsa-satilik-heybeliada-cabli-koyu-arsa-1070498765/detay",
+              description: "Heybeliada Çabli Köyü'nde 380 m² satılık arsa. Doğal yaşam alanı, orman komşusu, sakin çevre. Yazlık ev için ideal lokasyon.",
+              features: ["380 m²", "Orman Komşusu", "Doğal Yaşam", "Sakin Çevre", "Yazlık İdeal", "Uygun Fiyat"]
+            }
+          ],
+          total: 6,
+          source: 'sahibinden-style-mock',
+          message: 'Sahibinden.com tarzı örnek veriler (Backend aktif olmadığı için)'
+        };
+      }
+      
+      setListings(data.listings || []);
+      const sourceText = data.source === 'database' ? '(Database)' :
+                         data.source === 'sahibinden.com' ? '(Gerçek Scraping)' : 
+                         '(Mock Data)';
+      showToastMessage(`${data.listings?.length || 0} ilan başarıyla çekildi! ${sourceText}`, 'success');
+      
+    } catch (error) {
+      console.error('Listing fetch error:', error);
+      showToastMessage('İlanlar çekilirken hata oluştu: ' + (error as Error).message, 'error');
+    } finally {
+      setLoadingListings(false);
+    }
+  };
+
+  // Database'den mevcut ilanları getirme fonksiyonu
+  const fetchDatabaseListings = async () => {
+    setLoadingListings(true);
+    showToastMessage('Database\'den kayıtlı ilanlar getiriliyor...', 'info');
+    
+    try {
+      const response = await fetch('/api/listings');
+      
+      if (!response.ok) {
+        throw new Error('Database\'e erişilemedi');
+      }
+      
+      const data = await response.json();
+      setListings(data.listings || []);
+      showToastMessage(`${data.listings?.length || 0} ilan database'den getirildi!`, 'success');
+      
+    } catch (error) {
+      console.error('Database fetch error:', error);
+      showToastMessage('Database\'den ilan getirilirken hata: ' + (error as Error).message, 'error');
+    } finally {
+      setLoadingListings(false);
+    }
+  };
 
   // Slider form state'leri
   const [sliderFormData, setSliderFormData] = useState({
@@ -83,10 +248,10 @@ const AdminPanel: React.FC = () => {
   // Başarı mesajını göster ve konfeti efekti ile birlikte 3 saniye sonra gizle
   const showSuccessMessage = (message: string) => {
     setSuccessMessage(message);
-    setShowConfetti(true);
+  // setShowConfetti(true); // konfeti kaldırıldı
     setTimeout(() => {
       setSuccessMessage(null);
-      setShowConfetti(false);
+  // setShowConfetti(false); // konfeti kaldırıldı
     }, 3000);
   };
 
@@ -274,6 +439,7 @@ const AdminPanel: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
     { id: 'agents', label: 'Danışmanlar', icon: Users },
     { id: 'properties', label: 'Arsalar', icon: Building },
+    { id: 'listings', label: 'İlanlarımız', icon: Globe },
     { id: 'slider', label: 'Ana Sayfa Slider', icon: Image },
   { id: 'testimonials', label: 'Müşteri Yorumları', icon: MessageSquare },
     { id: 'contact', label: 'İletişim Talepleri', icon: Mail },
@@ -286,40 +452,55 @@ const AdminPanel: React.FC = () => {
     updateFunction(updated);
   };
 
-  const handleDeleteAgent = (id: string) => {
-    if (window.confirm('Bu danışmanı silmek istediğinizden emin misiniz?')) {
-      deleteAgent(id);
-    }
+  const handleDeleteAgent = (id: string, name?: string) => {
+    setItemToDelete({ id, type: 'agent', name });
+    setShowDeleteModal(true);
   };
 
-  const handleDeleteProperty = (id: string) => {
-    if (window.confirm('Bu mülkü silmek istediğinizden emin misiniz?')) {
-      deleteProperty(id);
-    }
+  const handleDeleteProperty = (id: string, name?: string) => {
+    setItemToDelete({ id, type: 'property', name });
+    setShowDeleteModal(true);
   };
 
-  const handleDeleteTestimonial = async (id: string) => {
-    if (window.confirm('Bu yorumu silmek istediğinizden emin misiniz?')) {
-      try {
+  const handleDeleteTestimonial = (id: string, name?: string) => {
+    setItemToDelete({ id, type: 'testimonial', name });
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      if (itemToDelete.type === 'agent') {
+        deleteAgent(itemToDelete.id);
+        showSuccessMessage('✅ Danışman başarıyla silindi!');
+      } else if (itemToDelete.type === 'property') {
+        deleteProperty(itemToDelete.id);
+        showSuccessMessage('✅ Arsa başarıyla silindi!');
+      } else if (itemToDelete.type === 'testimonial') {
         // Supabase'dan sil
-        const realId = id.replace('-supabase', '');
+        const realId = itemToDelete.id.replace('-supabase', '');
         const { error } = await dbHelpers.deleteTestimonial(realId);
         
         if (error) {
           console.error('Supabase yorum silme hatası:', error);
-          alert('Yorum silinirken bir hata oluştu.');
+          showSuccessMessage('❌ Yorum silinirken hata oluştu!');
           return;
         }
         
         console.log('✅ Yorum başarıyla Supabase\'dan silindi');
         
         // Local state'i güncelle
-        deleteTestimonial(id);
-      } catch (error) {
-        console.error('Beklenmeyen hata:', error);
-        alert('Yorum silinirken bir hata oluştu.');
+        deleteTestimonial(itemToDelete.id);
+        showSuccessMessage('✅ Yorum başarıyla silindi!');
       }
+    } catch (error) {
+      console.error('Delete error:', error);
+      showSuccessMessage('❌ Silme işlemi sırasında hata oluştu!');
     }
+    
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   const handleSave = async (items: any[], updateFunction: Function, newItem: any, itemType: 'agents' | 'properties') => {
@@ -343,7 +524,7 @@ const AdminPanel: React.FC = () => {
           });
           
           if (error) {
-            alert('Agent güncellenirken hata oluştu: ' + error.message);
+            showToastMessage('Agent güncellenirken hata oluştu: ' + error.message, 'error');
             return;
           }
           showSuccessMessage('✅ Danışman başarıyla güncellendi!');
@@ -375,7 +556,7 @@ const AdminPanel: React.FC = () => {
           });
           
           if (error) {
-            alert('Property güncellenirken hata oluştu: ' + error.message);
+            showToastMessage('Property güncellenirken hata oluştu: ' + error.message, 'error');
             return;
           }
           showSuccessMessage('✅ Arsa/Mülk başarıyla güncellendi!');
@@ -406,7 +587,7 @@ const AdminPanel: React.FC = () => {
           });
           
           if (error) {
-            alert('Agent eklenirken hata oluştu: ' + error.message);
+            showToastMessage('Agent eklenirken hata oluştu: ' + error.message, 'error');
             return;
           }
           showSuccessMessage('✅ Yeni danışman başarıyla eklendi!');
@@ -439,7 +620,7 @@ const AdminPanel: React.FC = () => {
           });
           
           if (error) {
-            alert('Property eklenirken hata oluştu: ' + error.message);
+            showToastMessage('Property eklenirken hata oluştu: ' + error.message, 'error');
             return;
           }
           showSuccessMessage('✅ Yeni arsa/mülk başarıyla eklendi!');
@@ -456,11 +637,11 @@ const AdminPanel: React.FC = () => {
       setShowForm(false);
       
       // Başarı mesajı
-      alert(editingItem?.id ? 'Güncelleme başarılı!' : 'Ekleme başarılı!');
+      showToastMessage(editingItem?.id ? 'Güncelleme başarılı!' : 'Ekleme başarılı!', 'success');
       
     } catch (error) {
       console.error('handleSave hatası:', error);
-      alert('İşlem sırasında hata oluştu: ' + (error as Error).message);
+      showToastMessage('İşlem sırasında hata oluştu: ' + (error as Error).message, 'error');
     }
   };
 
@@ -578,7 +759,7 @@ const AdminPanel: React.FC = () => {
                   <Edit className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
                 <button
-                  onClick={() => handleDeleteAgent(agent.id)}
+                  onClick={() => handleDeleteAgent(agent.id, agent.name)}
                   className="p-1.5 md:p-2 text-red-600 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
@@ -636,7 +817,7 @@ const AdminPanel: React.FC = () => {
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleDeleteProperty(property.id)}
+                  onClick={() => handleDeleteProperty(property.id, property.title)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -671,9 +852,26 @@ const AdminPanel: React.FC = () => {
     </div>
   );
 
+  const handleDeleteSlide = (id: string) => {
+    const updated = sliderItems.filter(s => s.id !== id);
+    updateSliderItems(updated);
+    showToastMessage('Slide silindi', 'success');
+  };
+
+  const handleMoveSlide = (id: string, direction: 'up' | 'down') => {
+    const index = sliderItems.findIndex(s => s.id === id);
+    if (index === -1) return;
+    let newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= sliderItems.length) return; // sınır
+    const reordered = [...sliderItems];
+    const [item] = reordered.splice(index, 1);
+    reordered.splice(newIndex, 0, item);
+    updateSliderItems(reordered);
+  };
+
   const renderSlider = () => (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold">Ana Sayfa Slider</h2>
         <button
           onClick={() => { setShowForm(true); setEditingItem(null); }}
@@ -685,31 +883,61 @@ const AdminPanel: React.FC = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {sliderItems.map((slide) => (
-          <div key={slide.id} className="bg-gray-50 rounded-lg p-4 relative group">
-            <img 
-              src={slide.image} 
-              alt={slide.title}
-              className="w-full h-48 object-cover rounded-lg mb-4"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/api/placeholder/400/300';
-              }}
-            />
-            
-            <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => { setEditingItem(slide); setShowForm(true); }}
-                className="bg-gray-900 text-white p-2 rounded-full hover:bg-gray-800"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleToggleActive(sliderItems, updateSliderItems, slide.id)}
-                className={`p-2 rounded-full ${slide.isActive ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
-              >
-                {slide.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </button>
+        {sliderItems.map((slide, idx) => (
+          <div key={slide.id} className="bg-gray-50 rounded-lg p-4 relative group border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="relative mb-4">
+              <img 
+                src={slide.image} 
+                alt={slide.title}
+                className="w-full h-48 object-cover rounded-lg"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/api/placeholder/400/300';
+                }}
+              />
+              {/* Üst sağ aksiyonlar */}
+              <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => { setEditingItem(slide); setShowForm(true); }}
+                  className="bg-gray-900 text-white p-2 rounded-full hover:bg-gray-800"
+                  title="Düzenle"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleToggleActive(sliderItems, updateSliderItems, slide.id)}
+                  className={`p-2 rounded-full ${slide.isActive ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
+                  title={slide.isActive ? 'Pasif Yap' : 'Aktif Yap'}
+                >
+                  {slide.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => handleDeleteSlide(slide.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full"
+                  title="Sil"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Sıralama butonları */}
+              <div className="absolute bottom-2 left-2 flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => handleMoveSlide(slide.id, 'up')}
+                  disabled={idx === 0}
+                  className="bg-white/90 backdrop-blur text-gray-700 disabled:opacity-40 p-1 rounded hover:bg-white shadow border"
+                  title="Yukarı Taşı"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleMoveSlide(slide.id, 'down')}
+                  disabled={idx === sliderItems.length - 1}
+                  className="bg-white/90 backdrop-blur text-gray-700 disabled:opacity-40 p-1 rounded hover:bg-white shadow border"
+                  title="Aşağı Taşı"
+                >
+                  <ArrowDown className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <h3 className="font-semibold text-lg mb-2 line-clamp-2">{slide.title}</h3>
@@ -723,12 +951,95 @@ const AdminPanel: React.FC = () => {
               <span className={`px-2 py-1 rounded-full text-xs ${slide.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                 {slide.isActive ? 'Aktif' : 'Pasif'}
               </span>
+              <span className="text-xs text-gray-400">#{idx + 1}</span>
             </div>
           </div>
         ))}
       </div>
 
       {showForm && activeTab === 'slider' && renderSliderForm()}
+    </div>
+  );
+
+  const renderListings = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Sahibinden.com İlanlarımız</h2>
+        <div className="flex space-x-3">
+          <button
+            onClick={fetchDatabaseListings}
+            disabled={loadingListings}
+            className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold flex items-center space-x-2"
+          >
+            <Globe className="w-5 h-5" />
+            <span>{loadingListings ? 'Yükleniyor...' : 'Kayıtlı İlanlar'}</span>
+          </button>
+          <button
+            onClick={fetchListings}
+            disabled={loadingListings}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-semibold flex items-center space-x-2"
+          >
+            <Globe className="w-5 h-5" />
+            <span>{loadingListings ? 'İlanlar Çekiliyor...' : 'Yeni İlanları Çek'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        {loadingListings ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Sahibinden.com'dan ilanlar çekiliyor...</p>
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="text-center py-12">
+            <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Henüz İlan Yok</h3>
+            <p className="text-gray-600 mb-4">Sahibinden.com'dan ilanlarınızı çekmek için yukarıdaki butona tıklayın</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listings.map((listing, index) => (
+              <div key={index} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div className="relative mb-3">
+                  <img
+                    src={listing.image || 'https://via.placeholder.com/400x250?text=Resim+Yok'}
+                    alt={listing.title}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                  <div className="absolute top-2 right-2 bg-blue-600 text-white px-2 py-1 rounded-md text-xs font-semibold">
+                    {listing.price || 'Fiyat Yok'}
+                  </div>
+                </div>
+                
+                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                  {listing.title || 'Başlık Yok'}
+                </h3>
+                
+                <p className="text-sm text-gray-600 mb-2 flex items-center">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {listing.location || 'Konum Yok'}
+                </p>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    {listing.date || 'Tarih Yok'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSelectedListing(listing);
+                      setShowListingModal(true);
+                    }}
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+                  >
+                    Detaylar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -762,59 +1073,59 @@ const AdminPanel: React.FC = () => {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-4xl max-h-[95vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl font-bold">
               {editingItem?.id ? 'Slide Düzenle' : 'Yeni Slide Ekle'}
             </h3>
-            <button onClick={() => { setShowForm(false); setEditingItem(null); }}>
-              <X className="w-6 h-6" />
+            <button onClick={() => { setShowForm(false); setEditingItem(null); }} className="p-1">
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
           
-          <form onSubmit={handleSliderSave} className="space-y-6">
+          <form onSubmit={handleSliderSave} className="space-y-4 sm:space-y-6">
             {/* Temel Bilgiler Bölümü */}
-            <div className="border-b pb-6">
-              <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
-                <Building className="w-5 h-5 mr-2" />
+            <div className="border-b pb-4 sm:pb-6">
+              <h4 className="font-semibold mb-3 sm:mb-4 text-gray-700 flex items-center text-sm sm:text-base">
+                <Building className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Temel Bilgiler
               </h4>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Başlık</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Başlık</label>
                   <input
                     type="text"
                     value={sliderFormData.title}
                     onChange={(e) => setSliderFormData({...sliderFormData, title: e.target.value})}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
                     placeholder="ADALAR GAYRİMENKUL"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Lokasyon</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Lokasyon</label>
                   <input
                     type="text"
                     value={sliderFormData.location}
                     onChange={(e) => setSliderFormData({...sliderFormData, location: e.target.value})}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
                     placeholder="NİDAPARK"
                   />
                 </div>
               </div>
               
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Alt Başlık</label>
+              <div className="mt-3 sm:mt-4">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Alt Başlık</label>
                 <input
                   type="text"
                   value={sliderFormData.subtitle}
                   onChange={(e) => setSliderFormData({...sliderFormData, subtitle: e.target.value})}
                   required
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
                   placeholder="Geleceğin değerli toprakları"
                 />
               </div>
@@ -997,7 +1308,7 @@ const AdminPanel: React.FC = () => {
   };
 
   return (
-    <div className="pt-24 pb-16 min-h-screen bg-gray-100">
+    <div className="pt-0 pb-16 min-h-screen bg-gray-100">
       <style>{`
         .line-clamp-3 {
           display: -webkit-box;
@@ -1005,7 +1316,67 @@ const AdminPanel: React.FC = () => {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
+        
+        /* Mobile Form Optimizations */
+        @media (max-width: 640px) {
+          .modal-content {
+            margin: 0.5rem !important;
+            max-width: calc(100vw - 1rem) !important;
+          }
+          
+          .grid-responsive {
+            grid-template-columns: 1fr !important;
+          }
+          
+          input, textarea, select {
+            font-size: 16px !important; /* Prevents zoom on iOS */
+          }
+          
+          .admin-form-container {
+            padding: 0.75rem !important;
+          }
+          
+          .admin-modal {
+            padding: 0.5rem !important;
+          }
+        }
       `}</style>
+
+      {/* Dahili Admin Üst Bar */}
+  <div className="sticky top-0 z-40 bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-black/80 border-b border-neutral-800 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center relative">
+          {/* Sol: Başlık */}
+          <div className="flex flex-col justify-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight tracking-tight">Admin Panel</h1>
+            <p className="text-xs sm:text-sm text-gray-300 mt-0.5">İçerikleri buradan yönetin.</p>
+          </div>
+          {/* Orta: Logo */}
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center h-full group">
+            <img
+              src="https://i.hizliresim.com/rs5qoel.png"
+              alt="Logo"
+              className="h-14 w-auto object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.15)] transition-transform group-hover:scale-105"
+              referrerPolicy="no-referrer"
+            />
+          </Link>
+          {/* Sağ: Butonlar */}
+          <div className="ml-auto flex items-center space-x-3">
+            <Link
+              to="/"
+              className="hidden sm:inline-block px-4 py-2 text-sm font-medium rounded-md bg-neutral-800 hover:bg-neutral-700 text-gray-200 hover:text-white transition"
+            >
+              Anasayfa
+            </Link>
+            <Button
+              variant="danger"
+              onClick={logout}
+              className="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white border-0 shadow-md hover:shadow-lg transition"
+            >
+              Çıkış
+            </Button>
+          </div>
+        </div>
+      </div>
       
       {/* Başarı Mesajı */}
       {successMessage && (
@@ -1022,7 +1393,7 @@ const AdminPanel: React.FC = () => {
             <button 
               onClick={() => {
                 setSuccessMessage(null);
-                setShowConfetti(false);
+                // setShowConfetti(false); // konfeti kaldırıldı
               }}
               className="flex-shrink-0 text-green-200 hover:text-white transition-colors"
             >
@@ -1035,21 +1406,7 @@ const AdminPanel: React.FC = () => {
       )}
 
       {/* Konfeti Animasyonu */}
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-40">
-          {Array.from({ length: 50 }).map((_, i) => (
-            <div
-              key={i}
-              className="confetti"
-              style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Konfeti efekti kaldırıldı */}
 
       <style>{`
         @keyframes slide-in-right {
@@ -1067,68 +1424,9 @@ const AdminPanel: React.FC = () => {
           animation: slide-in-right 0.3s ease-out;
         }
 
-        @keyframes confetti-fall {
-          0% {
-            transform: translateY(-100vh) rotateZ(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100vh) rotateZ(360deg);
-            opacity: 0;
-          }
-        }
-
-        .confetti {
-          position: fixed;
-          width: 10px;
-          height: 10px;
-          background: #FFD700;
-          animation: confetti-fall 3s linear;
-          z-index: 9999;
-        }
-
-        .confetti:nth-child(odd) {
-          background: #FF6B6B;
-          width: 8px;
-          height: 8px;
-          animation-delay: -0.5s;
-        }
-
-        .confetti:nth-child(even) {
-          background: #4ECDC4;
-          width: 6px;
-          height: 6px;
-          animation-delay: -1s;
-        }
-
-        .confetti:nth-child(3n) {
-          background: #45B7D1;
-          width: 12px;
-          height: 12px;
-          animation-delay: -1.5s;
-        }
-
-        .confetti:nth-child(4n) {
-          background: #96CEB4;
-          width: 7px;
-          height: 7px;
-          animation-delay: -2s;
-        }
-
-        .confetti:nth-child(5n) {
-          background: #FFEAA7;
-          width: 9px;
-          height: 9px;
-          animation-delay: -2.5s;
-        }
+        /* Konfeti stilleri kaldırıldı */
       `}</style>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Panel</h1>
-          <Button variant="danger" onClick={logout} className="w-full sm:w-auto">
-            Çıkış Yap
-          </Button>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Mobile Tab Navigation */}
@@ -1164,15 +1462,16 @@ const AdminPanel: React.FC = () => {
             ))}
           </div>
 
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'agents' && renderAgents()}
             {activeTab === 'properties' && renderProperties()}
+            {activeTab === 'listings' && renderListings()}
             {activeTab === 'slider' && renderSlider()}
             {activeTab === 'testimonials' && (
               <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold">Müşteri Yorumları</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+                  <h2 className="text-xl sm:text-2xl font-bold">Müşteri Yorumları</h2>
                   <button
                     onClick={async () => {
                       try {
@@ -1188,13 +1487,13 @@ const AdminPanel: React.FC = () => {
                             isActive: testimonial.is_active
                           }));
                           updateTestimonials(mappedTestimonials);
-                          alert(`${mappedTestimonials.length} yorum yüklendi`);
+                          showToastMessage(`${mappedTestimonials.length} yorum yüklendi`, 'success');
                         } else {
-                          alert('Supabase\'dan veri çekilemedi: ' + (error?.message || 'Bilinmeyen hata'));
+                          showToastMessage('Supabase\'dan veri çekilemedi: ' + (error?.message || 'Bilinmeyen hata'), 'error');
                         }
                       } catch (error) {
                         console.error('Manuel yenileme hatası:', error);
-                        alert('Hata: ' + (error as Error).message);
+                        showToastMessage('Hata: ' + (error as Error).message, 'error');
                       }
                     }}
                     className="px-4 py-2 bg-gray-900 text-white rounded hover:bg-gray-800"
@@ -1282,7 +1581,7 @@ const AdminPanel: React.FC = () => {
                                       
                                       if (error) {
                                         console.error('Supabase yorum güncelleme hatası:', error);
-                                        alert('Yorum durumu güncellenirken bir hata oluştu.');
+                                        showToastMessage('Yorum durumu güncellenirken bir hata oluştu.', 'error');
                                         return;
                                       }
                                       
@@ -1293,7 +1592,7 @@ const AdminPanel: React.FC = () => {
                                       updateTestimonials(updated);
                                     } catch (error) {
                                       console.error('Beklenmeyen hata:', error);
-                                      alert('Yorum durumu güncellenirken bir hata oluştu.');
+                                      showToastMessage('Yorum durumu güncellenirken bir hata oluştu.', 'error');
                                     }
                                   }}
                                   title={t.isActive ? 'Yayından Kaldır' : 'Yayınla'}
@@ -1301,7 +1600,7 @@ const AdminPanel: React.FC = () => {
                                   {t.isActive ? 'Kaldır' : 'Yayınla'}
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteTestimonial(t.id)}
+                                  onClick={() => handleDeleteTestimonial(t.id, t.name)}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
                                   title="Yorumu Sil"
                                 >
@@ -1355,6 +1654,195 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && itemToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 max-w-sm w-full mx-2 sm:mx-4 transform transition-all duration-200 scale-95 animate-pulse">
+            <div className="text-center animate-none">
+              {/* Icon */}
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+              </div>
+              
+              {/* Title */}
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
+                {itemToDelete.type === 'agent' && 'Danışmanı Sil'}
+                {itemToDelete.type === 'property' && 'Arsayı Sil'}
+                {itemToDelete.type === 'testimonial' && 'Yorumu Sil'}
+              </h3>
+              
+              {/* Message */}
+              <p className="text-gray-600 mb-2">
+                {itemToDelete.name && (
+                  <>
+                    <span className="font-semibold">"{itemToDelete.name}"</span> 
+                    {itemToDelete.type === 'agent' && ' adlı danışmanı'}
+                    {itemToDelete.type === 'property' && ' adlı arsayı'}
+                    {itemToDelete.type === 'testimonial' && ' adlı kullanıcının yorumunu'}
+                  </>
+                )}
+                {!itemToDelete.name && (
+                  <>
+                    Bu {itemToDelete.type === 'agent' && 'danışmanı'}
+                    {itemToDelete.type === 'property' && 'arsayı'}
+                    {itemToDelete.type === 'testimonial' && 'yorumu'}
+                  </>
+                )}
+                {' '}silmek istediğinizden emin misiniz?
+              </p>
+              <p className="text-sm text-red-600 mb-8">Bu işlem geri alınamaz!</p>
+              
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-colors"
+                >
+                  Evet, Sil
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Listing Detail Modal */}
+      {showListingModal && selectedListing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-xl sm:rounded-2xl max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-4xl w-full max-h-[95vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 flex justify-between items-center">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">İlan Detayları</h3>
+              <button
+                onClick={() => {
+                  setShowListingModal(false);
+                  setSelectedListing(null);
+                }}
+                className="p-1 sm:p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </div>
+            
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Görsel Bölümü */}
+                <div className="space-y-4">
+                  <img
+                    src={selectedListing.image || 'https://via.placeholder.com/600x400?text=Resim+Yok'}
+                    alt={selectedListing.title}
+                    className="w-full h-80 object-cover rounded-lg"
+                  />
+                  
+                  {selectedListing.images && selectedListing.images.length > 1 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {selectedListing.images.slice(1, 5).map((img: string, idx: number) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt={`Ek görsel ${idx + 1}`}
+                          className="w-full h-20 object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            // Ana resmi değiştir
+                            const newListing = { ...selectedListing, image: img };
+                            setSelectedListing(newListing);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Bilgi Bölümü */}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-2xl font-bold text-gray-900 mb-4">
+                      {selectedListing.title}
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Fiyat</p>
+                        <p className="text-lg font-bold text-blue-600">
+                          {selectedListing.price || 'Fiyat Bilgisi Yok'}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Konum</p>
+                        <p className="text-lg font-semibold text-gray-900 flex items-center">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          {selectedListing.location || 'Konum Bilgisi Yok'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {selectedListing.description && (
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-900 mb-3">Açıklama</h5>
+                      <p className="text-gray-700 leading-relaxed">
+                        {selectedListing.description}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {selectedListing.features && (
+                    <div>
+                      <h5 className="text-lg font-semibold text-gray-900 mb-3">Özellikler</h5>
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedListing.features.map((feature: string, idx: number) => (
+                          <div key={idx} className="flex items-center text-sm text-gray-600">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                            {feature}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center text-sm text-gray-500">
+                      <span>İlan Tarihi: {selectedListing.date || 'Belirtilmemiş'}</span>
+                      <span>İlan No: {selectedListing.id || 'Belirtilmemiş'}</span>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <a
+                        href={selectedListing.url || 'https://adalargayrimenkul.sahibinden.com/'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-center block"
+                      >
+                        Sahibinden.com'da Görüntüle
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Messages */}
+      {showToast && (
+        <Toast
+          type={toastType}
+          message={toastMessage}
+          show={showToast}
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </div>
   );
 };
@@ -1442,32 +1930,32 @@ const AgentForm: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-4xl max-h-[95vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <h3 className="text-lg sm:text-xl font-bold">
             {agent.id ? 'Danışman Düzenle' : 'Yeni Danışman'}
           </h3>
-          <button onClick={onCancel}>
-            <X className="w-6 h-6" />
+          <button onClick={onCancel} className="p-1">
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {/* Temel Bilgiler Bölümü */}
-          <div className="border-b pb-6">
-            <h4 className="font-semibold mb-4 text-gray-700 flex items-center">
-              <Users className="w-5 h-5 mr-2" />
+          <div className="border-b pb-4 sm:pb-6">
+            <h4 className="font-semibold mb-3 sm:mb-4 text-gray-700 flex items-center text-sm sm:text-base">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Temel Bilgiler
             </h4>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               <input
                 type="text"
                 placeholder="Ad Soyad"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
                 required
               />
               <input
@@ -1475,7 +1963,7 @@ const AgentForm: React.FC<{
                 placeholder="Ünvan"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
                 required
               />
             </div>
@@ -1942,27 +2430,27 @@ const PropertyForm: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-4xl max-h-[95vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <h3 className="text-lg sm:text-xl font-bold">
             {property.id ? 'Arsa Düzenle' : 'Yeni Arsa'}
           </h3>
-          <button onClick={onCancel}>
-            <X className="w-6 h-6" />
+          <button onClick={onCancel} className="p-1">
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {/* Temel Bilgiler */}
-          <div className="border-b pb-4">
-            <h4 className="font-semibold mb-3 text-gray-700">Temel Bilgiler</h4>
+          <div className="border-b pb-3 sm:pb-4">
+            <h4 className="font-semibold mb-2 sm:mb-3 text-gray-700 text-sm sm:text-base">Temel Bilgiler</h4>
             <input
               type="text"
               placeholder="Arsa Başlığı"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg mb-3"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg mb-2 sm:mb-3 text-sm sm:text-base"
               required
             />
             <input

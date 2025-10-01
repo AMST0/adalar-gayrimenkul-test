@@ -56,12 +56,26 @@ const AboutSummary: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 space-y-4">
               <a
                 href="/biz-kimiz"
-                className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
+                className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center mr-4"
               >
                 {t.buttons.more}
+              </a>
+              
+              <a
+                href="https://adalargayrimenkul.sahibinden.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white border-2 border-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center"
+              >
+                <img 
+                  src="https://s0.shbdn.com/assets/images/sahibindencom-logo-s:6af6f8af6cb352097d43a6709122523d.png" 
+                  alt="Sahibinden.com" 
+                  className="mr-2 h-5 w-auto"
+                />
+                İlanlarımızı Görün
               </a>
             </div>
           </div>

@@ -118,19 +118,34 @@ const FeaturedProperties: React.FC = () => {
           ))}
         </div>
 
-        <div className="text-center mt-16">
+        <div className="text-center mt-16 space-y-4">
           <a
             href="/arsalar"
-            className="inline-flex items-center bg-gradient-to-r from-gray-900 to-gray-800 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl group"
+            className="inline-flex items-center bg-gradient-to-r from-gray-900 to-gray-800 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:from-gray-800 hover:to-gray-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl group mr-4"
           >
             <TrendingUp className="mr-3 w-6 h-6" />
             {t.property.allProperties} {t.buttons.explore}
             <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
           </a>
+          
+          <a
+            href="https://adalargayrimenkul.sahibinden.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center bg-white border-2 border-gray-300 text-gray-800 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 hover:border-gray-400 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl group"
+          >
+            <img 
+              src="https://s0.shbdn.com/assets/images/sahibindencom-logo-s:6af6f8af6cb352097d43a6709122523d.png" 
+              alt="Sahibinden.com" 
+              className="mr-3 h-6 w-auto"
+            />
+            Sahibinden.com'daki İlanlarımız
+            <ArrowRight className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+          </a>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

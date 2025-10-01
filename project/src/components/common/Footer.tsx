@@ -63,6 +63,19 @@ const Footer: React.FC = () => {
               >
                 → İletişim
               </a>
+              <a 
+                href="https://adalargayrimenkul.sahibinden.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-yellow-400 hover:text-white transition-colors duration-300 hover:translate-x-2 transform font-semibold"
+              >
+                <img 
+                  src="https://s0.shbdn.com/assets/images/sahibindencom-logo-s:6af6f8af6cb352097d43a6709122523d.png" 
+                  alt="Sahibinden.com" 
+                  className="h-4 w-auto mr-2"
+                />
+                → Sahibinden.com İlanlarımız
+              </a>
             </nav>
           </div>
 
