@@ -27,155 +27,189 @@ export interface PropertyForShare {
 
 const COMPANY_LOGO = 'https://i.hizliresim.com/rs5qoel.png';
 
-// PDF Raporu Oluştur
+// Dahili: Türkçe karakterleri desteklemek için Roboto fontunu yüklemeye çalış
+async function ensureTurkishFont(pdf: jsPDF) {
+  // Google Fonts Roboto Regular (TTF) - CORS genellikle açık olur
+  const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf';
+  try {
+    const res = await fetch(fontUrl);
+    if (!res.ok) throw new Error('Font fetch failed');
+    const buf = await res.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(buf);
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const sub = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(sub));
+    }
+    const base64 = btoa(binary);
+    pdf.addFileToVFS('Roboto-Regular.ttf', base64);
+    pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    pdf.setFont('Roboto', 'normal');
+    return true;
+  } catch (e) {
+    // Fallback helvetica (bazı Türkçe karakterleri eksik olabilir)
+    pdf.setFont('helvetica', 'normal');
+    return false;
+  }
+}
+
+// Basit ASCII dönüştürme fallback (ı->i, İ->I vb) sadece font yüklenemezse kullanılır
+function normalizeTurkishFallback(text: string): string {
+  const map: Record<string,string> = {
+    'ş':'s','Ş':'S','ğ':'g','Ğ':'G','ı':'i','İ':'I','ö':'o','Ö':'O','ü':'u','Ü':'U','ç':'c','Ç':'C'
+  };
+  return text.replace(/[şŞğĞıİöÖüÜçÇ]/g, ch => map[ch] || ch);
+}
+
+// PDF Raporu Oluştur (kullanıcı isteğine göre sade, ortalanmış tasarım)
 export const generatePropertyPDF = async (property: PropertyForShare): Promise<void> => {
   try {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 12;
-    const contentWidth = pageWidth - margin * 2;
-    const leftColX = margin;
-    const rightColX = pageWidth / 2 + 2; // small gutter
 
-    // Arka plan bantları / modern vurgu
-    pdf.setFillColor(241, 245, 249); // slate-100
-    pdf.rect(0, 0, pageWidth, 30, 'F');
-    pdf.setFillColor(15, 23, 42); // slate-900 footer bar
-    pdf.rect(0, pageHeight - 18, pageWidth, 18, 'F');
+    // Üst siyah bar
+    const topBarHeight = 25;
+    pdf.setFillColor(0,0,0);
+    pdf.rect(0,0,pageWidth,topBarHeight,'F');
 
-    // Logo veya başlık
-    let logoLoaded = false;
+    // Alt siyah bar
+    const bottomBarHeight = 18;
+    pdf.setFillColor(0,0,0);
+    pdf.rect(0,pageHeight - bottomBarHeight,pageWidth,bottomBarHeight,'F');
+
+    // Logo (ortada üst bar içinde)
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
       logoImg.src = COMPANY_LOGO;
       await new Promise((res, rej) => { logoImg.onload = res; logoImg.onerror = rej; });
-      pdf.addImage(logoImg, 'PNG', margin, 8, 28, 14);
-      logoLoaded = true;
-    } catch { /* ignore */ }
+      const logoW = 38; const logoH = 14;
+      pdf.addImage(logoImg, 'PNG', (pageWidth - logoW)/2, (topBarHeight - logoH)/2, logoW, logoH);
+    } catch {/* ignore logo */}
 
-    pdf.setFont('helvetica', 'bold');
+    // Font hazırlığı
+    const fontOk = await ensureTurkishFont(pdf);
+    const tr = (t: string) => fontOk ? t : normalizeTurkishFallback(t);
+
+    // İçerik başlangıç Y
+    let y = topBarHeight + 12;
+    const centerX = pageWidth / 2;
+
+    // Başlık
     pdf.setFontSize(16);
-    pdf.setTextColor(220, 38, 38); // red-600
-    pdf.text('ARSA DEĞER / BİLGİ RAPORU', logoLoaded ? margin + 34 : margin, 14);
-    pdf.setFontSize(10);
-    pdf.setTextColor(71, 85, 105); // slate-500
-    pdf.text(new Date().toLocaleDateString('tr-TR'), logoLoaded ? margin + 34 : margin, 21);
+    pdf.setTextColor(0,0,0);
+    pdf.text(tr(property.title || 'Arsa Bilgisi'), centerX, y, { align: 'center' });
+    y += 10;
 
-    // Baş ana görsel (sol kolon üst)
-    let currentYLeft = 36;
-    if (property.images && property.images[0]) {
+    // Görsel (varsa) - genişliğe göre ortalanır
+    if (property.images?.[0]) {
       try {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.src = property.images[0];
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-        const targetW = (contentWidth / 2) - 4;
-        const maxH = 55;
-        let w = targetW; let h = w * (img.height / img.width);
+        const maxW = pageWidth - 40; // kenarlardan pay
+        const maxH = 70;
+        let w = maxW; let h = w * (img.height / img.width);
         if (h > maxH) { h = maxH; w = h * (img.width / img.height); }
-        pdf.setDrawColor(226, 232, 240); // border
-        pdf.roundedRect(leftColX, currentYLeft, targetW, h, 2, 2, 'S');
-        const imgX = leftColX + (targetW - w) / 2;
-        const imgY = currentYLeft + (h - h) / 2;
-        pdf.addImage(img, 'JPEG', imgX, imgY, w, h);
-        currentYLeft += h + 6;
-      } catch {
-        // ignore image fail
-      }
+        pdf.setDrawColor(200);
+        pdf.rect(centerX - w/2 - 1, y - 1, w + 2, h + 2); // çerçeve
+        pdf.addImage(img, 'JPEG', centerX - w/2, y, w, h);
+        y += h + 10;
+      } catch {/* ignore image fail */}
     }
 
-    // Özellik başlığı
-    pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(30, 41, 59); // slate-800
-    pdf.text('ÖZET BİLGİLER', leftColX, currentYLeft);
-    currentYLeft += 6;
-    pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(51, 65, 85);
+    // Fiyat
+    const formattedPrice = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(property.price);
+    pdf.setFontSize(18);
+    pdf.setTextColor(200,0,0);
+    pdf.text(tr(formattedPrice), centerX, y, { align: 'center' });
+    y += 10;
 
-    const infoPairs: [string,string][] = [
-      ['Başlık', property.title],
+    // Özet tablo benzeri çift sütun (merkezde) -> Anahtar:Değer listesi
+    pdf.setFontSize(11);
+    pdf.setTextColor(0,0,0);
+    const entries: [string,string|number|undefined|null][] = [
       ['Konum', property.location],
-      ['Büyüklük', `${property.size?.toLocaleString('tr-TR')} m²`],
+      ['Büyüklük', property.size ? property.size.toLocaleString('tr-TR') + ' m²' : '—'],
       ['Tür', property.property_type],
       ['İmar', property.zoning || '—'],
-  ['Ada', property.island || '—'],
+      ['Ada', property.island || '—'],
+      ['Tapu', property.deed_status || '—'],
+      ['Sahil Mesafesi', property.coastline ? property.coastline + ' m' : '—'],
       ['Yol', property.road_access ? 'Var' : 'Yok'],
       ['Elektrik', property.electricity ? 'Var' : 'Yok'],
-      ['Su', property.water ? 'Var' : 'Yok'],
+      ['Su', property.water ? 'Var' : 'Yok']
     ];
-    infoPairs.forEach(([k,v]) => {
-      pdf.setFont('helvetica','bold');
-      pdf.text(`${k}:`, leftColX, currentYLeft);
-      pdf.setFont('helvetica','normal');
-      pdf.text(String(v), leftColX + 28, currentYLeft);
-      currentYLeft += 5;
+    const colPadding = 6;
+    const colGap = 20;
+    const colWidth = (pageWidth - 2*20 - colGap) / 2; // 20mm dış kenar payı
+    // Arka plan kutusu yüksekliğini önce hesapla (satır sayısı / 2 yuvarla)
+    const rowsPerCol = Math.ceil(entries.length / 2);
+    const rowHeight = 6;
+    const boxHeight = rowsPerCol * rowHeight + 6; // üst-alt padding
+    const boxY = y;
+    pdf.setFillColor(245,245,245);
+    pdf.roundedRect(20, boxY, pageWidth - 40, boxHeight, 3, 3, 'F');
+    y += 6; // üst padding
+    let leftY = boxY + 6;
+    let rightY = boxY + 6;
+    entries.forEach((e, idx) => {
+      const isLeft = idx < rowsPerCol;
+      const targetY = isLeft ? leftY : rightY;
+      const baseX = 20 + (isLeft ? 0 : (colWidth + colGap));
+      const label = tr(e[0] + ':');
+      const value = tr(String(e[1] ?? '—'));
+      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'bold');
+      pdf.text(label, baseX + colPadding, targetY);
+      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
+      pdf.text(value, baseX + colPadding + 28, targetY);
+      if (isLeft) leftY += rowHeight; else rightY += rowHeight;
     });
+    y = boxY + boxHeight + 10;
 
-    // Fiyat kartı
-    const formattedPrice = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(property.price);
-    pdf.setFillColor(248, 250, 252); // slate-50
-    pdf.roundedRect(leftColX, currentYLeft + 2, (contentWidth/2)-4, 16, 2, 2, 'F');
-    pdf.setFont('helvetica','bold');
-    pdf.setTextColor(185, 28, 28); // red-700
-    pdf.setFontSize(14);
-    pdf.text(formattedPrice, leftColX + 4, currentYLeft + 13);
-    currentYLeft += 24;
+    // Açıklama (varsa)
+    if (property.description) {
+      pdf.setFontSize(12);
+      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'bold');
+      pdf.text(tr('AÇIKLAMA'), centerX, y, { align: 'center' });
+      y += 7;
+      pdf.setFontSize(10);
+      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
+      const wrapped: string[] = pdf.splitTextToSize(tr(property.description), pageWidth - 40) as string[];
+      const startY = y;
+      wrapped.forEach((line: string) => {
+        pdf.text(line, centerX, y, { align: 'center' });
+        y += 5;
+      });
+      // Eğer sayfa sonunu aşarsa (basit kontrol)
+      if (y > pageHeight - bottomBarHeight - 20) {
+        // (Ekstra sayfa yönetimi istenirse ileride eklenebilir)
+      }
+      y = startY + wrapped.length * 5 + 5;
+    }
 
-    // Danışman bilgileri (sol alt blok)
+    // Danışman bilgisi (alt bar üstünde ortalı)
     if (property.agent) {
       pdf.setFontSize(11);
-      pdf.setTextColor(30,41,59);
-      pdf.setFont('helvetica','bold');
-      pdf.text('DANIŞMAN', leftColX, currentYLeft);
-      currentYLeft += 6;
+      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'bold');
+      pdf.text(tr('DANIŞMAN'), centerX, pageHeight - bottomBarHeight - 26, { align: 'center' });
       pdf.setFontSize(9);
-      pdf.setFont('helvetica','normal');
-      pdf.text(property.agent.name, leftColX, currentYLeft); currentYLeft += 5;
-      pdf.text(property.agent.phone, leftColX, currentYLeft); currentYLeft += 5;
-      pdf.text(property.agent.email, leftColX, currentYLeft); currentYLeft += 8;
+      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
+      const agentLines = [property.agent.name, property.agent.phone, property.agent.email].filter(Boolean).map(tr);
+      let ay = pageHeight - bottomBarHeight - 19;
+      agentLines.forEach(l => { pdf.text(l, centerX, ay, { align: 'center' }); ay += 5; });
     }
 
-    // Sağ kolon: Açıklama ve ek detaylar
-    let currentYRight = 36;
-    pdf.setFont('helvetica','bold');
-    pdf.setFontSize(12);
-    pdf.setTextColor(30,41,59);
-    pdf.text('AÇIKLAMA', rightColX, currentYRight);
-    currentYRight += 6;
-    pdf.setFont('helvetica','normal');
-    pdf.setFontSize(9);
-    pdf.setTextColor(55,65,81);
-    if (property.description) {
-      const wrapped = pdf.splitTextToSize(property.description, (contentWidth/2)-6);
-      pdf.text(wrapped, rightColX, currentYRight);
-      currentYRight += wrapped.length * 4 + 6;
-    } else {
-      pdf.text('Açıklama bulunmuyor.', rightColX, currentYRight);
-      currentYRight += 10;
-    }
+    // Footer metni (alt bardaki içerik, ortalanmış beyaz)
+    pdf.setFontSize(8);
+  pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
+    pdf.setTextColor(255,255,255);
+    pdf.text(tr('Adalar Gayrimenkul • www.adalargayrimenkul.com • Bu rapor bilgilendirme amaçlıdır.'), centerX, pageHeight - bottomBarHeight/2 + 2, { align: 'center' });
 
-    // Ek teknik satırlar (varsa)
-    const extra: [string,string|undefined][] = [
-      ['Tapu', property.deed_status],
-      ['Sahil', property.coastline ? `${property.coastline} m` : undefined]
-    ];
-    extra.forEach(([k,v])=>{
-      if(!v) return;
-      pdf.setFont('helvetica','bold'); pdf.text(`${k}:`, rightColX, currentYRight);
-      pdf.setFont('helvetica','normal'); pdf.text(String(v), rightColX + 24, currentYRight); currentYRight += 5;
-    });
-
-    // Alt açıklama / footer metni
-    pdf.setFontSize(7);
-    pdf.setFont('helvetica','normal');
-    pdf.setTextColor(241,245,249); // very light for dark bar contrast
-    pdf.text('Adalar Gayrimenkul • www.adalargayrimenkul.com • Bu rapor bilgilendirme amaçlıdır.', pageWidth/2, pageHeight-10, { align:'center' });
-
-    pdf.save(`${property.title.replace(/[^a-zA-Z0-9]/g,'_')}_rapor.pdf`);
+    pdf.save(`${(property.title || 'arsa').replace(/[^a-zA-Z0-9ığüşöçİĞÜŞÖÇ ]/g,'_')}_rapor.pdf`);
   } catch (error) {
     console.error('PDF oluşturulurken hata:', error);
     throw new Error('PDF oluşturulamadı');
