@@ -16,14 +16,15 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 // Database helper functions
 export const dbHelpers = {
   // Agents
-  async getAgents() {
-    console.log('🔍 getAgents() çağrıldı');
-    const { data, error } = await supabase
-      .from('agents')
-      .select('*')
-      .eq('is_active', true)
-    console.log('👥 Agents sorgu sonucu:', { data, error });
-    return { data: data || [], error }
+  async getAgents(options: { includeInactive?: boolean } = {}) {
+    console.log('🔍 getAgents() çağrıldı', options);
+    let query = supabase.from('agents').select('*');
+    if (!options.includeInactive) {
+      query = query.eq('is_active', true);
+    }
+    const { data, error } = await query;
+    console.log('👥 Agents sorgu sonucu:', { count: data?.length, includeInactive: options.includeInactive, error });
+    return { data: data || [], error };
   },
 
   async addAgent(agent: any) {

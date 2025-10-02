@@ -51,7 +51,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           sliderItemsResult,
           contactRequestsResult
         ] = await Promise.all([
-          dbHelpers.getAgents(),
+          dbHelpers.getAgents({ includeInactive: true }),
           dbHelpers.getProperties(),
           dbHelpers.getProjects(), 
           dbHelpers.getTestimonials(),

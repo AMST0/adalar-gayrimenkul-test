@@ -33,161 +33,149 @@ export const generatePropertyPDF = async (property: PropertyForShare): Promise<v
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    
-    // Logo ekle
+    const margin = 12;
+    const contentWidth = pageWidth - margin * 2;
+    const leftColX = margin;
+    const rightColX = pageWidth / 2 + 2; // small gutter
+
+    // Arka plan bantları / modern vurgu
+    pdf.setFillColor(241, 245, 249); // slate-100
+    pdf.rect(0, 0, pageWidth, 30, 'F');
+    pdf.setFillColor(15, 23, 42); // slate-900 footer bar
+    pdf.rect(0, pageHeight - 18, pageWidth, 18, 'F');
+
+    // Logo veya başlık
+    let logoLoaded = false;
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
-      await new Promise((resolve, reject) => {
-        logoImg.onload = resolve;
-        logoImg.onerror = reject;
-        logoImg.src = COMPANY_LOGO;
-      });
-      
-      // Logo boyutları (aspect ratio koruyarak)
-      const logoWidth = 40;
-      const logoHeight = 20;
-      const logoX = (pageWidth - logoWidth) / 2;
-      pdf.addImage(logoImg, 'PNG', logoX, 10, logoWidth, logoHeight);
-    } catch (error) {
-      console.warn('Logo yüklenemedi, metin ile devam ediliyor');
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('ADALAR GAYRİMENKUL', pageWidth / 2, 20, { align: 'center' });
-    }
+      logoImg.src = COMPANY_LOGO;
+      await new Promise((res, rej) => { logoImg.onload = res; logoImg.onerror = rej; });
+      pdf.addImage(logoImg, 'PNG', margin, 8, 28, 14);
+      logoLoaded = true;
+    } catch { /* ignore */ }
 
-    let yPosition = 40;
-
-    // Başlık
-    pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(property.title, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
-
-    // Fiyat
     pdf.setFontSize(16);
-    pdf.setTextColor(220, 38, 127); // Pink color
-    const formattedPrice = new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(property.price);
-    pdf.text(formattedPrice, pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15;
+    pdf.setTextColor(220, 38, 38); // red-600
+    pdf.text('ARSA DEĞER / BİLGİ RAPORU', logoLoaded ? margin + 34 : margin, 14);
+    pdf.setFontSize(10);
+    pdf.setTextColor(71, 85, 105); // slate-500
+    pdf.text(new Date().toLocaleDateString('tr-TR'), logoLoaded ? margin + 34 : margin, 21);
 
-    pdf.setTextColor(0, 0, 0); // Reset to black
-
-    // Ana görsel ekle
-    if (property.images && property.images.length > 0) {
+    // Baş ana görsel (sol kolon üst)
+    let currentYLeft = 36;
+    if (property.images && property.images[0]) {
       try {
-        const mainImg = new Image();
-        mainImg.crossOrigin = 'anonymous';
-        await new Promise((resolve, reject) => {
-          mainImg.onload = resolve;
-          mainImg.onerror = reject;
-          mainImg.src = property.images[0];
-        });
-
-        const maxWidth = pageWidth - 20;
-        const maxHeight = 80;
-        const imgAspectRatio = mainImg.width / mainImg.height;
-        
-        let imgWidth = maxWidth;
-        let imgHeight = imgWidth / imgAspectRatio;
-        
-        if (imgHeight > maxHeight) {
-          imgHeight = maxHeight;
-          imgWidth = imgHeight * imgAspectRatio;
-        }
-
-        const imgX = (pageWidth - imgWidth) / 2;
-        pdf.addImage(mainImg, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10;
-      } catch (error) {
-        console.warn('Ana görsel yüklenemedi');
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = property.images[0];
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+        const targetW = (contentWidth / 2) - 4;
+        const maxH = 55;
+        let w = targetW; let h = w * (img.height / img.width);
+        if (h > maxH) { h = maxH; w = h * (img.width / img.height); }
+        pdf.setDrawColor(226, 232, 240); // border
+        pdf.roundedRect(leftColX, currentYLeft, targetW, h, 2, 2, 'S');
+        const imgX = leftColX + (targetW - w) / 2;
+        const imgY = currentYLeft + (h - h) / 2;
+        pdf.addImage(img, 'JPEG', imgX, imgY, w, h);
+        currentYLeft += h + 6;
+      } catch {
+        // ignore image fail
       }
     }
 
-    // Özellikler
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('ÖZELLİKLER', 10, yPosition);
-    yPosition += 10;
-
+    // Özellik başlığı
     pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(30, 41, 59); // slate-800
+    pdf.text('ÖZET BİLGİLER', leftColX, currentYLeft);
+    currentYLeft += 6;
+    pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(51, 65, 85);
 
-    const properties = [
-      ['Konum:', property.location],
-      ['Büyüklük:', `${property.size.toLocaleString('tr-TR')} m²`],
-      ['Tür:', property.property_type],
-      ['İmar Durumu:', property.zoning || 'Belirtilmemiş'],
-      ['Sahil:', property.coastline ? `${property.coastline} m` : 'Yok'],
-      ['Ada:', property.island || 'Belirtilmemiş'],
-      ['Tapu Durumu:', property.deed_status || 'Belirtilmemiş'],
-      ['Elektrik:', property.electricity ? 'Var' : 'Yok'],
-      ['Su:', property.water ? 'Var' : 'Yok'],
-      ['Yol:', property.road_access ? 'Var' : 'Yok']
+    const infoPairs: [string,string][] = [
+      ['Başlık', property.title],
+      ['Konum', property.location],
+      ['Büyüklük', `${property.size?.toLocaleString('tr-TR')} m²`],
+      ['Tür', property.property_type],
+      ['İmar', property.zoning || '—'],
+  ['Ada', property.island || '—'],
+      ['Yol', property.road_access ? 'Var' : 'Yok'],
+      ['Elektrik', property.electricity ? 'Var' : 'Yok'],
+      ['Su', property.water ? 'Var' : 'Yok'],
     ];
-
-    properties.forEach(([key, value]) => {
-      if (value && value !== 'Belirtilmemiş' && value !== 'Yok') {
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(key, 10, yPosition);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(String(value), 60, yPosition);
-        yPosition += 7;
-      }
+    infoPairs.forEach(([k,v]) => {
+      pdf.setFont('helvetica','bold');
+      pdf.text(`${k}:`, leftColX, currentYLeft);
+      pdf.setFont('helvetica','normal');
+      pdf.text(String(v), leftColX + 28, currentYLeft);
+      currentYLeft += 5;
     });
 
-    yPosition += 10;
+    // Fiyat kartı
+    const formattedPrice = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(property.price);
+    pdf.setFillColor(248, 250, 252); // slate-50
+    pdf.roundedRect(leftColX, currentYLeft + 2, (contentWidth/2)-4, 16, 2, 2, 'F');
+    pdf.setFont('helvetica','bold');
+    pdf.setTextColor(185, 28, 28); // red-700
+    pdf.setFontSize(14);
+    pdf.text(formattedPrice, leftColX + 4, currentYLeft + 13);
+    currentYLeft += 24;
 
-    // Açıklama
-    if (property.description) {
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('AÇIKLAMA', 10, yPosition);
-      yPosition += 10;
-
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      
-      const splitDescription = pdf.splitTextToSize(property.description, pageWidth - 20);
-      pdf.text(splitDescription, 10, yPosition);
-      yPosition += splitDescription.length * 5 + 10;
-    }
-
-    // Danışman bilgileri
+    // Danışman bilgileri (sol alt blok)
     if (property.agent) {
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('DANIŞMAN BİLGİLERİ', 10, yPosition);
-      yPosition += 10;
-
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Ad Soyad:', 10, yPosition);
-      pdf.text(String(property.agent.name), 60, yPosition);
-      yPosition += 7;
-
-      pdf.text('Telefon:', 10, yPosition);
-      pdf.text(String(property.agent.phone), 60, yPosition);
-      yPosition += 7;
-
-      pdf.text('E-posta:', 10, yPosition);
-      pdf.text(String(property.agent.email), 60, yPosition);
-      yPosition += 7;
+      pdf.setFontSize(11);
+      pdf.setTextColor(30,41,59);
+      pdf.setFont('helvetica','bold');
+      pdf.text('DANIŞMAN', leftColX, currentYLeft);
+      currentYLeft += 6;
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica','normal');
+      pdf.text(property.agent.name, leftColX, currentYLeft); currentYLeft += 5;
+      pdf.text(property.agent.phone, leftColX, currentYLeft); currentYLeft += 5;
+      pdf.text(property.agent.email, leftColX, currentYLeft); currentYLeft += 8;
     }
 
-    // Footer
-    const footerY = pageHeight - 15;
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'italic');
-    pdf.text('Adalar Gayrimenkul - www.adalargayrimenkul.com', pageWidth / 2, footerY, { align: 'center' });
+    // Sağ kolon: Açıklama ve ek detaylar
+    let currentYRight = 36;
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(12);
+    pdf.setTextColor(30,41,59);
+    pdf.text('AÇIKLAMA', rightColX, currentYRight);
+    currentYRight += 6;
+    pdf.setFont('helvetica','normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(55,65,81);
+    if (property.description) {
+      const wrapped = pdf.splitTextToSize(property.description, (contentWidth/2)-6);
+      pdf.text(wrapped, rightColX, currentYRight);
+      currentYRight += wrapped.length * 4 + 6;
+    } else {
+      pdf.text('Açıklama bulunmuyor.', rightColX, currentYRight);
+      currentYRight += 10;
+    }
 
-    // PDF'i indir
-    pdf.save(`${property.title.replace(/[^a-zA-Z0-9]/g, '_')}_rapor.pdf`);
+    // Ek teknik satırlar (varsa)
+    const extra: [string,string|undefined][] = [
+      ['Tapu', property.deed_status],
+      ['Sahil', property.coastline ? `${property.coastline} m` : undefined]
+    ];
+    extra.forEach(([k,v])=>{
+      if(!v) return;
+      pdf.setFont('helvetica','bold'); pdf.text(`${k}:`, rightColX, currentYRight);
+      pdf.setFont('helvetica','normal'); pdf.text(String(v), rightColX + 24, currentYRight); currentYRight += 5;
+    });
+
+    // Alt açıklama / footer metni
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica','normal');
+    pdf.setTextColor(241,245,249); // very light for dark bar contrast
+    pdf.text('Adalar Gayrimenkul • www.adalargayrimenkul.com • Bu rapor bilgilendirme amaçlıdır.', pageWidth/2, pageHeight-10, { align:'center' });
+
+    pdf.save(`${property.title.replace(/[^a-zA-Z0-9]/g,'_')}_rapor.pdf`);
   } catch (error) {
     console.error('PDF oluşturulurken hata:', error);
     throw new Error('PDF oluşturulamadı');
