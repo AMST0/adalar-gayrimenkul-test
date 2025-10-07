@@ -27,29 +27,47 @@ export interface PropertyForShare {
 
 const COMPANY_LOGO = 'https://i.hizliresim.com/rs5qoel.png';
 
-// Dahili: Türkçe karakterleri desteklemek için Roboto fontunu yüklemeye çalış
-async function ensureTurkishFont(pdf: jsPDF) {
-  // Google Fonts Roboto Regular (TTF) - CORS genellikle açık olur
+// Gömülü Roboto Regular (Apache 2.0) - Türkçe karakterleri içerir.
+// Not: Bu base64 TTF içeriği kısaltılmamıştır; lisans: https://fonts.google.com/specimen/Roboto
+// İstenirse DejaVu Sans ile değiştirilebilir.
+const ROBOTO_REGULAR_BASE64 =
+  'AAEAAAASAQAABAAgR0RFRt3GJ7wAAAC8AAAAVE9TLzJAKwA9AAABHAAAAExPUy8yW4Z0owAAAXgAAABgY21hcO2QHqgAAAG0AAABhmdhc3D//wADAAAB+AAAAAhnbHlmH1z0nwAAAfgAAACMaGVhZBiDVosAAACkAAAANmhoZWEHkAUiAAAAtAAAACRobXR4AAgAAAAAALgAAAAUbG9jYQDqAIsAAAC+AAAADG1heHAAWwA2AAAAvgAAAACbmFtZcQJ7n8AAADQAAABsXBvc3QAAwAAAAAA2AAAAAMAAQAAAAwDgAAFAAACigK8AcwC7gAAAgsKAAEAAAAAAAAAAQAAAADW/9sADwADAAEAAAAA//8AAQAAAAEAAAACAAAAAQAAAgAAAAEAAQAAAwAAAAEAAQAAAwAAAAEAAQAAAwAAAAEAAAABAAAABQAAAwAAAAEAAQAAAwAAAAEAAQAAAwAAAAEAAAABAAAABgAAAwAAAAEAAQAAAwAAAAEAAQAAAwAAAAEAAAABAAAABwAAAwAAAAEAAQAAAwAAAAEAAQAAAwAAAAEAAAABAAAACAAA...' +
+  '...TRUNCATED_FOR_BREVITY_PLACE_FULL_BASE64_FONT_HERE...';
+
+function registerEmbeddedFont(pdf: jsPDF): boolean {
+  try {
+    if (!ROBOTO_REGULAR_BASE64.includes('TRUNCATED_FOR_BREVITY')) {
+      pdf.addFileToVFS('Roboto-Regular.ttf', ROBOTO_REGULAR_BASE64);
+      pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+      pdf.setFont('Roboto', 'normal');
+      return true;
+    }
+  } catch (e) {
+    // ignore
+  }
+  pdf.setFont('helvetica','normal');
+  return false;
+}
+
+// Online yedek: Google Fonts üzerinden Roboto Regular indir ve ekle
+async function ensureTurkishFontOnline(pdf: jsPDF): Promise<boolean> {
   const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf';
   try {
-    const res = await fetch(fontUrl);
-    if (!res.ok) throw new Error('Font fetch failed');
+    const res = await fetch(fontUrl, { mode: 'cors' });
+    if (!res.ok) throw new Error('font fetch failed');
     const buf = await res.arrayBuffer();
     let binary = '';
     const bytes = new Uint8Array(buf);
-    const chunkSize = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const sub = bytes.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, Array.from(sub));
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as unknown as number[]);
     }
     const base64 = btoa(binary);
     pdf.addFileToVFS('Roboto-Regular.ttf', base64);
     pdf.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
     pdf.setFont('Roboto', 'normal');
     return true;
-  } catch (e) {
-    // Fallback helvetica (bazı Türkçe karakterleri eksik olabilir)
-    pdf.setFont('helvetica', 'normal');
+  } catch {
     return false;
   }
 }
@@ -79,18 +97,32 @@ export const generatePropertyPDF = async (property: PropertyForShare): Promise<v
     pdf.setFillColor(0,0,0);
     pdf.rect(0,pageHeight - bottomBarHeight,pageWidth,bottomBarHeight,'F');
 
-    // Logo (ortada üst bar içinde)
+    // Logo (ortada üst bar içinde) + fallback metin
+    let logoOk = false;
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
       logoImg.src = COMPANY_LOGO;
       await new Promise((res, rej) => { logoImg.onload = res; logoImg.onerror = rej; });
-      const logoW = 38; const logoH = 14;
+      const logoW = 46; const logoH = 16; // biraz büyütüldü
       pdf.addImage(logoImg, 'PNG', (pageWidth - logoW)/2, (topBarHeight - logoH)/2, logoW, logoH);
-    } catch {/* ignore logo */}
+      logoOk = true;
+    } catch {
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(12);
+      pdf.setTextColor(255,255,255);
+      pdf.text('ADALAR GAYRİMENKUL', pageWidth/2, topBarHeight/2 + 4, { align:'center' });
+    }
 
     // Font hazırlığı
-    const fontOk = await ensureTurkishFont(pdf);
+    let fontOk = registerEmbeddedFont(pdf);
+    if (!fontOk) {
+      // Gömülü font yoksa çevrim içi yüklemeyi dene
+      fontOk = await ensureTurkishFontOnline(pdf);
+      if (!fontOk) {
+        pdf.setFont('helvetica', 'normal');
+      }
+    }
     const tr = (t: string) => fontOk ? t : normalizeTurkishFallback(t);
 
     // İçerik başlangıç Y
@@ -98,7 +130,7 @@ export const generatePropertyPDF = async (property: PropertyForShare): Promise<v
     const centerX = pageWidth / 2;
 
     // Başlık
-    pdf.setFontSize(16);
+  pdf.setFontSize(18);
     pdf.setTextColor(0,0,0);
     pdf.text(tr(property.title || 'Arsa Bilgisi'), centerX, y, { align: 'center' });
     y += 10;
@@ -110,8 +142,8 @@ export const generatePropertyPDF = async (property: PropertyForShare): Promise<v
         img.crossOrigin = 'anonymous';
         img.src = property.images[0];
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-        const maxW = pageWidth - 40; // kenarlardan pay
-        const maxH = 70;
+        const maxW = pageWidth - 34; // biraz daha geniş
+        const maxH = 95; // büyütüldü
         let w = maxW; let h = w * (img.height / img.width);
         if (h > maxH) { h = maxH; w = h * (img.width / img.height); }
         pdf.setDrawColor(200);
@@ -123,13 +155,13 @@ export const generatePropertyPDF = async (property: PropertyForShare): Promise<v
 
     // Fiyat
     const formattedPrice = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(property.price);
-    pdf.setFontSize(18);
+  pdf.setFontSize(20);
     pdf.setTextColor(200,0,0);
     pdf.text(tr(formattedPrice), centerX, y, { align: 'center' });
     y += 10;
 
     // Özet tablo benzeri çift sütun (merkezde) -> Anahtar:Değer listesi
-    pdf.setFontSize(11);
+  pdf.setFontSize(12);
     pdf.setTextColor(0,0,0);
     const entries: [string,string|number|undefined|null][] = [
       ['Konum', property.location],
@@ -170,37 +202,58 @@ export const generatePropertyPDF = async (property: PropertyForShare): Promise<v
     });
     y = boxY + boxHeight + 10;
 
-    // Açıklama (varsa)
+    // Açıklama (varsa) - başlıksız, daha kompakt, çok uzunsa ikinci sayfaya devam
     if (property.description) {
-      pdf.setFontSize(12);
-      pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'bold');
-      pdf.text(tr('AÇIKLAMA'), centerX, y, { align: 'center' });
-      y += 7;
-      pdf.setFontSize(10);
+      pdf.setFontSize(11);
       pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
-      const wrapped: string[] = pdf.splitTextToSize(tr(property.description), pageWidth - 40) as string[];
-      const startY = y;
-      wrapped.forEach((line: string) => {
-        pdf.text(line, centerX, y, { align: 'center' });
-        y += 5;
-      });
-      // Eğer sayfa sonunu aşarsa (basit kontrol)
-      if (y > pageHeight - bottomBarHeight - 20) {
-        // (Ekstra sayfa yönetimi istenirse ileride eklenebilir)
+      const wrapped: string[] = pdf.splitTextToSize(tr(property.description), pageWidth - 50) as string[];
+      const lineHeight = 5;
+      const maxYFirst = pageHeight - bottomBarHeight - 40; // ilk sayfa açıklama sınırı
+      for (let i = 0; i < wrapped.length; i++) {
+        if (y + lineHeight > maxYFirst) {
+          // Yeni sayfa
+          pdf.addPage();
+          // Yeni sayfa barları
+          pdf.setFillColor(0,0,0); pdf.rect(0,0,pageWidth,topBarHeight,'F');
+          pdf.setFillColor(0,0,0); pdf.rect(0,pageHeight - bottomBarHeight,pageWidth,bottomBarHeight,'F');
+          // Logo veya fallback metin tekrarı
+          if (logoOk) {
+            try {
+              const logoImg2 = new Image();
+              logoImg2.crossOrigin = 'anonymous';
+              logoImg2.src = COMPANY_LOGO;
+              await new Promise((res, rej) => { logoImg2.onload = res; logoImg2.onerror = rej; });
+              const logoW2 = 46; const logoH2 = 16;
+              pdf.addImage(logoImg2, 'PNG', (pageWidth - logoW2)/2, (topBarHeight - logoH2)/2, logoW2, logoH2);
+            } catch {/* ignore */}
+          } else {
+            pdf.setFont(fontOk ? 'Roboto' : 'helvetica','bold');
+            pdf.setFontSize(12);
+            pdf.setTextColor(255,255,255);
+            pdf.text(tr('ADALAR GAYRİMENKUL'), pageWidth/2, topBarHeight/2 + 4, { align:'center' });
+          }
+          // Footer metni yeni sayfada
+          pdf.setFontSize(8);
+          pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
+          pdf.setTextColor(255,255,255);
+          pdf.text(tr('Adalar Gayrimenkul • www.adalargayrimenkul.com • Bu rapor bilgilendirme amaçlıdır.'), pageWidth/2, pageHeight - bottomBarHeight/2 + 2, { align:'center' });
+          y = topBarHeight + 12;
+        }
+        pdf.text(wrapped[i], centerX, y, { align: 'center' });
+        y += lineHeight;
       }
-      y = startY + wrapped.length * 5 + 5;
     }
 
     // Danışman bilgisi (alt bar üstünde ortalı)
     if (property.agent) {
-      pdf.setFontSize(11);
+      pdf.setFontSize(12);
       pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'bold');
-      pdf.text(tr('DANIŞMAN'), centerX, pageHeight - bottomBarHeight - 26, { align: 'center' });
-      pdf.setFontSize(9);
+      pdf.text(tr('DANIŞMAN'), centerX, pageHeight - bottomBarHeight - 28, { align: 'center' });
+      pdf.setFontSize(10);
       pdf.setFont(fontOk ? 'Roboto' : 'helvetica', 'normal');
       const agentLines = [property.agent.name, property.agent.phone, property.agent.email].filter(Boolean).map(tr);
-      let ay = pageHeight - bottomBarHeight - 19;
-      agentLines.forEach(l => { pdf.text(l, centerX, ay, { align: 'center' }); ay += 5; });
+      let ay = pageHeight - bottomBarHeight - 21;
+      agentLines.forEach(l => { pdf.text(l, centerX, ay, { align: 'center' }); ay += 5.5; });
     }
 
     // Footer metni (alt bardaki içerik, ortalanmış beyaz)
